@@ -1,0 +1,83 @@
+/* DevOps boss scene (key 0) */
+#boss {
+  position: absolute;
+  inset: 80px 0 0;
+  background: radial-gradient(#3a0d0d, #0c0306);
+  display: none;
+  z-index: 6;
+  overflow: hidden;
+}
+
+#boss.on {
+  display: block;
+}
+
+.server {
+  position: absolute;
+  bottom: 0;
+  width: 100px;
+  height: 230px;
+  background: repeating-linear-gradient(#222 0 10px, #555 10px 12px);
+  font-size: 34px;
+  text-align: center;
+  animation: blink 0.5s steps(2) infinite;
+}
+
+.server.short {
+  height: 170px;
+}
+
+#boss-sprite {
+  position: absolute;
+  left: 360px;
+  bottom: 20px;
+  width: 256px;
+  height: 232px;
+}
+
+#boss-sprite canvas {
+  width: 256px;
+  height: 232px;
+}
+
+.boss-phone {
+  position: absolute;
+  left: 26px;
+  top: 116px;
+  width: 30px;
+  height: 50px;
+  background: #111;
+  border: 3px solid #fff;
+  box-shadow: 0 0 25px #f0f;
+  animation: tap 0.3s steps(2) infinite;
+}
+
+@keyframes tap {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+#boss-bubble {
+  position: absolute;
+  left: 470px;
+  top: 70px;
+  width: 400px;
+  background: #fff;
+  color: #000;
+  border: 4px solid #000;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  display: none;
+}
+
+#boss-bubble small {
+  font-size: 9px;
+}
+
+.candy {
+  position: absolute;
+  font-size: 28px;
+}

@@ -1,0 +1,56 @@
+/* "Real-life case study" slide (key C), flipped in from the side */
+#case {
+  transform: rotateY(-90deg);
+  opacity: 0;
+  background: #0b0b14;
+  padding: 34px 40px;
+  font-family: VT323, monospace;
+  font-size: 27px;
+  line-height: 1.15;
+}
+
+#case.on {
+  transform: none;
+  opacity: 1;
+}
+
+#case h2 {
+  font: 20px 'Press Start 2P';
+  color: var(--magenta);
+  margin-bottom: 22px;
+  text-shadow:
+    3px 3px #000,
+    0 0 14px var(--magenta);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px;
+}
+
+.columns section {
+  background: #141428;
+  border: 4px solid var(--magenta);
+  padding: 18px;
+  min-height: 340px;
+  outline: none;
+}
+
+.columns section.right {
+  border-color: var(--cyan);
+}
+
+.columns h3 {
+  font: 13px 'Press Start 2P';
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+
+.columns p {
+  margin-bottom: 14px;
+}
+
+.columns p.hint {
+  color: #789;
+}

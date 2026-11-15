@@ -1,0 +1,189 @@
+/* Layer that holds all transient effect elements */
+#fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  overflow: hidden;
+}
+
+#fx > * {
+  position: absolute;
+}
+
+/* Projectiles */
+.projectile {
+  font-size: 9px;
+  white-space: nowrap;
+  padding: 8px 12px;
+  border: 3px solid #fff;
+  z-index: 5;
+}
+
+.fireball {
+  background: radial-gradient(circle, #fff, #00e5ff 55%, #0070ff);
+  border-radius: 30px;
+  color: #003;
+  box-shadow: 0 0 25px #0ff;
+}
+
+.slash {
+  background: radial-gradient(circle, #fff, #e91e63 55%, #800);
+  border-radius: 30px 0 30px 0;
+  box-shadow: 0 0 25px #e91e63;
+}
+
+.scroll {
+  background: #d9b26a;
+  color: #400;
+  box-shadow: 0 0 20px #f60;
+}
+
+.boot {
+  background: none;
+  border: 0;
+  font-size: 56px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.boot span {
+  display: block;
+  font-size: 10px;
+  background: #000;
+  padding: 4px;
+  border: 2px solid #f44;
+  margin-top: 4px;
+}
+
+.pebble {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: #aaa;
+  clip-path: polygon(50% 0, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0 50%, 35% 35%);
+  filter: drop-shadow(0 0 6px #f00);
+}
+
+.ai-pr {
+  background: #00c853;
+  color: #000;
+  font-size: 8px;
+  padding: 5px 7px;
+  border: 2px solid #fff;
+}
+
+/* Jira tickets and the pile they form */
+.ticket {
+  background: #fff;
+  color: #0052cc;
+  border: 3px solid #0052cc;
+  font-size: 9px;
+  padding: 6px;
+  z-index: 6;
+}
+
+.ticket-pile {
+  width: 175px;
+  background: repeating-linear-gradient(8deg, #0052cc 0 12px, #fff 12px 15px, #2684ff 15px 27px);
+  border: 3px solid #fff;
+  z-index: 6;
+}
+
+.shield {
+  width: 230px;
+  height: 300px;
+  border: 6px solid var(--gold);
+  border-radius: 50% 50% 45% 45%;
+  background: #ffd70033;
+  box-shadow: 0 0 25px var(--gold);
+  color: var(--gold);
+  font-size: 14px;
+  text-align: center;
+  padding-top: 8px;
+}
+
+.shield.cyan {
+  border-color: var(--cyan);
+  background: #0ff3;
+  box-shadow: 0 0 25px var(--cyan);
+  color: var(--cyan);
+}
+
+/* Floating text (damage numbers, labels) */
+.pop {
+  font-size: 14px;
+  text-shadow:
+    2px 2px #000,
+    -1px -1px #000;
+  white-space: nowrap;
+  animation: float-up 1.4s forwards;
+  z-index: 7;
+}
+
+@keyframes float-up {
+  to {
+    transform: translateY(-70px);
+    opacity: 0;
+  }
+}
+
+/* Full-width banners ("CRITICAL HIT!", "ROUND 1 – FIGHT!") */
+.banner {
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 30px;
+  line-height: 1.4;
+  text-shadow:
+    4px 4px #b30000,
+    0 0 20px var(--magenta);
+  animation: slam 0.35s both;
+  z-index: 9;
+  padding: 10px;
+  background: linear-gradient(90deg, #0000, #000b 15%, #000b 85%, #0000);
+}
+
+.banner.small {
+  font-size: 18px;
+}
+
+.banner.souls {
+  font:
+    62px Georgia,
+    serif;
+  letter-spacing: 8px;
+  color: #a00000;
+  text-shadow: 0 0 30px #f00;
+  animation-duration: 0.6s;
+}
+
+@keyframes slam {
+  from {
+    transform: scale(4);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.unlock-badge {
+  background: #000;
+  border: 3px solid var(--gold);
+  color: var(--gold);
+  font-size: 11px;
+  padding: 8px 12px;
+  animation: slam 0.3s both;
+  z-index: 7;
+}
+
+#flash {
+  position: absolute;
+  inset: 0;
+  background: #f00;
+  opacity: 0;
+  z-index: 8;
+  pointer-events: none;
+}

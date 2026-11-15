@@ -1,0 +1,115 @@
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: #0b0618;
+  border-bottom: 4px solid var(--magenta);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  z-index: 3;
+}
+
+.player {
+  flex: 1;
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.player .row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player.right {
+  text-align: right;
+}
+
+.player.right .row {
+  flex-direction: row-reverse;
+}
+
+.portrait {
+  width: 66px;
+  height: 48px;
+  border: 3px solid var(--gold);
+  background: #223;
+}
+
+/* Health bar: red "ghost" bar lags behind the green fill */
+.health-bar {
+  height: 22px;
+  border: 3px solid #fff;
+  background: #300;
+  position: relative;
+  margin: 3px 0;
+}
+
+.health-bar i {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+
+.player.right .health-bar i {
+  left: auto;
+  right: 0;
+}
+
+.health-ghost {
+  background: #ff3030;
+  transition: width 0.9s;
+}
+
+.health-fill {
+  background: #3ddc3d;
+  transition: width 0.3s;
+}
+
+.health-bar.danger {
+  animation: blink 0.4s steps(2) infinite;
+}
+
+.badge {
+  font-size: 7px;
+  background: var(--magenta);
+  padding: 3px 5px;
+  display: inline-block;
+}
+
+.player.right .badge {
+  background: #00b8d0;
+  color: #000;
+}
+
+#vs {
+  text-align: center;
+  width: 130px;
+  font-size: 24px;
+  color: var(--gold);
+  text-shadow: 3px 3px #b30000;
+}
+
+#vs small {
+  display: block;
+  font-size: 10px;
+  color: #fff;
+  margin-top: 6px;
+  text-shadow: none;
+  animation: blink 1s steps(2) infinite;
+}
+
+#vs.red small {
+  color: #ff2020;
+}

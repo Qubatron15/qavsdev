@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>TestCon 2027 · DEV vs QA · FIGHT!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="stage">
+      <div id="game">
+        <div id="wall"></div>
+        <div id="floor"></div>
+
+        <!-- Dev's lair -->
+        <div class="monitor code" style="left: 30px; top: 130px"></div>
+        <div class="monitor code" style="left: 178px; top: 150px; width: 110px"></div>
+        <img
+          class="prop guitar"
+          src="/src/assets/props/guitar.png"
+          alt=""
+          style="left: 375px; top: 210px; width: 79px"
+        />
+        <div class="emoji-prop" style="left: 60px; top: 392px">☕</div>
+        <img
+          class="prop"
+          src="/src/assets/props/floppy.png"
+          alt=""
+          style="left: 430px; top: 385px; width: 44px"
+        />
+
+        <!-- QA's lab -->
+        <img
+          class="prop"
+          src="/src/assets/props/masks-wide.png"
+          alt=""
+          style="left: 520px; top: 100px; width: 140px"
+        />
+        <img
+          class="prop"
+          src="/src/assets/props/masks-tall.png"
+          alt=""
+          style="left: 524px; top: 190px; width: 70px"
+        />
+        <img
+          class="prop"
+          src="/src/assets/props/radar-console.png"
+          alt=""
+          style="right: 22px; top: 96px; width: 200px"
+        />
+        <div class="emoji-prop" style="right: 60px; top: 392px">🎮</div>
+
+        <!-- HUD: portraits, health bars, VS timer -->
+        <div id="hud">
+          <div class="player">
+            <div class="row">
+              <canvas id="portrait-dev" class="portrait" width="66" height="48"></canvas>
+              <div class="player-info">
+                PLAYER 1: JAKUB (FULL-STACK DEV)
+                <div class="health-bar" id="health-bar-0">
+                  <i class="health-ghost" id="health-ghost-0"></i>
+                  <i class="health-fill" id="health-fill-0"></i>
+                </div>
+                <span class="badge">[PC MASTER RACE - KEYBOARD]</span>
+                <span id="health-label-0">100%</span>
+              </div>
+            </div>
+          </div>
+          <div id="vs">VS<small>FRI 15:30</small></div>
+          <div class="player right">
+            <div class="row">
+              <canvas id="portrait-qa" class="portrait" width="66" height="48"></canvas>
+              <div class="player-info">
+                PLAYER 2: EMILIA (SENIOR QA)
+                <div class="health-bar" id="health-bar-1">
+                  <i class="health-ghost" id="health-ghost-1"></i>
+                  <i class="health-fill" id="health-fill-1"></i>
+                </div>
+                <span id="health-label-1">100%</span>
+                <span class="badge">[CONSOLE GAMER - CONTROLLER]</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fighter" id="fighter-dev"></div>
+        <div class="fighter" id="fighter-qa"></div>
+
+        <!-- DevOps boss scene (key 0) -->
+        <div id="boss">
+          <div class="server" style="left: 30px">🔥🔥</div>
+          <div class="server short" style="left: 140px">🔥</div>
+          <div class="server" style="right: 30px">🔥🔥</div>
+          <div class="server short" style="right: 140px">🔥</div>
+          <div id="boss-sprite"><div class="boss-phone"></div></div>
+          <div id="boss-bubble"></div>
+        </div>
+
+        <div id="fx"></div>
+        <div id="flash"></div>
+
+        <div id="caption">
+          <div id="caption-text"></div>
+          <div class="help">
+            [1-8] Story Beats | [0] DevOps Boss | [C] Case Study Slide | [R] Reset |
+            <span id="sound-toggle">🔊 SOUND [M]</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case-study slide (key C). Sections are editable live during the talk. -->
+      <div id="case">
+        <h2>⚔ REAL-LIFE CASE STUDY ⚔</h2>
+        <div class="columns">
+          <section contenteditable="true">
+            <h3>OUR PROJECT</h3>
+            <p>▸ Context: [team · stack · release cadence]</p>
+            <p>▸ Where Dev ↔ QA friction hurt: [example]</p>
+            <p>▸ What we changed: [role shadowing · bug communication · pre-QA desk check]</p>
+            <p>▸ Result: [outcome / metric]</p>
+          </section>
+          <section class="right" contenteditable="true">
+            <h3>INDUSTRY RESEARCH</h3>
+            <p>▸ DORA: [AI adoption vs. delivery stability: add figure + year]</p>
+            <p>▸ GitClear: [AI-assisted code churn: add figure + year]</p>
+            <p>▸ Context switching: [cost of an interruption: add source]</p>
+            <p class="hint">Click to edit · Esc to leave the text · C = back to the arena</p>
+          </section>
+        </div>
+      </div>
+
+      <div id="crt"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
