@@ -56,7 +56,7 @@ index.html              markup: arena, HUD, boss scene, case-study slide
 src/
   main.js               entry point: styles, sprites, input, initial reset
   assets/
-    sprites/            fighter poses: kuba_/emi_ stand, throw, block, hit
+    sprites/            fighter poses: kuba_/emi_ stand, throw, block, hit, jump
     props/              scene props (guitar, floppy, masks, radar console)
   styles/               base, scene, hud, effects, boss, case-study
   js/

@@ -80,7 +80,7 @@ export const FIGHTER_HEIGHT = 230;
 const fighters = [];
 
 /**
- * Load a fighter's pose images (stand / throw / block / hit) into an <img> inside the
+ * Load a fighter's pose images (stand / throw / block / hit / jump) into an <img> inside the
  * fighter container, and paint a head-and-shoulders crop of the stand pose into the HUD portrait.
  */
 export function loadFighter(player, poseSources, portraitSelector) {
@@ -144,7 +144,7 @@ function drawPortrait(image, portraitSelector) {
   $(portraitSelector).getContext('2d').drawImage(image, x, y, cropWidth, cropHeight, 0, 0, 66, 48);
 }
 
-/** Show pose `name` ('stand' | 'throw' | 'block' | 'hit') for a player. */
+/** Show pose `name` ('stand' | 'throw' | 'block' | 'hit' | 'jump') for a player. */
 export function setPose(player, name) {
   const entry = fighters[player];
   if (!entry || entry.pose === name) return;

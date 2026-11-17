@@ -462,7 +462,8 @@ function poseFor(f) {
   if (f.health === 0) return 'hit';
   if (f.stun > 0) return f.stunPose;
   if (f.blocking) return 'block';
-  if (f.throwTimer > 0) return 'throw';
+  if (f.throwTimer > 0) return 'throw'; // a mid-air throw briefly shows the throw pose
+  if (f.y > 0) return 'jump';
   return 'stand';
 }
 
