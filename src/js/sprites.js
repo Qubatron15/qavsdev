@@ -72,23 +72,47 @@ export function createBossSprite() {
   $('#boss-sprite').prepend(drawPixelSprite(64, 58, drawBoss));
 }
 
+/** Per fighter container: its canvas, idle/attack images, zoom and pending revert timer. */
+const poses = new WeakMap();
+
+function drawPose(canvas, image, zoom) {
+  canvas.width = image.width;
+  canvas.height = image.height;
+  canvas.getContext('2d').drawImage(image, 0, 0);
+  canvas.style.width = image.width * zoom + 'px';
+}
+
 /**
  * Load a fighter sprite sheet into a pixelated canvas inside `containerSelector`
  * (scaled by `zoom`), and paint its head-and-shoulders crop into the HUD portrait.
+ * An optional `attackSrc` is preloaded and shown briefly by showAttackPose().
  */
-export function loadFighterSprite(src, containerSelector, zoom, portraitSelector) {
+export function loadFighterSprite(src, containerSelector, zoom, portraitSelector, attackSrc) {
+  const container = $(containerSelector);
   const canvas = document.createElement('canvas');
-  const image = new Image();
-  image.onload = () => {
-    canvas.width = image.width;
-    canvas.height = image.height;
-    canvas.getContext('2d').drawImage(image, 0, 0);
-    canvas.style.width = image.width * zoom + 'px';
-    $(containerSelector).prepend(canvas);
-    const portraitCropHeight = image.width * 0.727; // matches the 66×48 portrait ratio
+  const idle = new Image();
+  idle.onload = () => {
+    drawPose(canvas, idle, zoom);
+    container.prepend(canvas);
+    const portraitCropHeight = idle.width * 0.727; // matches the 66×48 portrait ratio
     $(portraitSelector)
       .getContext('2d')
-      .drawImage(image, 0, 0, image.width, portraitCropHeight, 0, 0, 66, 48);
+      .drawImage(idle, 0, 0, idle.width, portraitCropHeight, 0, 0, 66, 48);
   };
-  image.src = src;
+  idle.src = src;
+  let attack = null;
+  if (attackSrc) {
+    attack = new Image();
+    attack.src = attackSrc;
+  }
+  poses.set(container, { canvas, idle, attack, zoom, timer: 0 });
+}
+
+/** Swap the fighter in `container` to its attack sprite for `duration` ms, if it has one. */
+export function showAttackPose(container, duration) {
+  const pose = poses.get(container);
+  if (!pose?.attack?.naturalWidth || !pose.idle.naturalWidth) return;
+  clearTimeout(pose.timer);
+  drawPose(pose.canvas, pose.attack, pose.zoom);
+  pose.timer = setTimeout(() => drawPose(pose.canvas, pose.idle, pose.zoom), duration);
 }

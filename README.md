@@ -37,7 +37,7 @@ index.html              markup: arena, HUD, boss scene, case-study slide
 src/
   main.js               entry point: styles, sprites, input, initial reset
   assets/
-    sprites/            fighter sprite sheets (jakub.png, emi_stand.png)
+    sprites/            fighter sprite sheets (jakub.png, emi_stand.png, emi_throw.png)
     props/              scene props (guitar, floppy, masks, radar console)
   styles/               base, scene, hud, effects, boss, case-study
   js/
