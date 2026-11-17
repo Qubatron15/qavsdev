@@ -73,6 +73,22 @@
   border: 2px solid #fff;
 }
 
+/* Thrown floppy disks (positioned and spun by fight.js) */
+.floppy {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  z-index: 6;
+}
+
+.floppy.p0 {
+  filter: drop-shadow(0 0 6px var(--cyan));
+}
+
+.floppy.p1 {
+  filter: drop-shadow(0 0 6px var(--magenta));
+}
+
 /* Jira tickets and the pile they form */
 .ticket {
   background: #fff;

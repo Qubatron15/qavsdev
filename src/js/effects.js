@@ -1,6 +1,6 @@
 import { fxLayer, game, fighter } from './dom.js';
 import { sfx } from './audio.js';
-import { showAttackPose } from './sprites.js';
+import { flashPose } from './sprites.js';
 
 /** Spawn an absolutely positioned element in the effects layer. */
 export function spawn(className, html, x, y) {
@@ -78,7 +78,7 @@ export function shake() {
 
 /** Fighter steps toward the opponent and back, briefly showing its attack sprite. */
 export function lunge(player) {
-  showAttackPose(fighter(player), 450);
+  flashPose(player, 'throw', 450);
   fighter(player).animate(
     [
       { transform: 'none' },

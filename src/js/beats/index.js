@@ -6,7 +6,7 @@ import { aiTicketFlood } from './05-ai-ticket-flood.js';
 import { playerIntros } from './06-player-intros.js';
 import { tradingHits } from './07-trading-hits.js';
 import { stageCleared } from './08-stage-cleared.js';
-import { devopsBoss } from './00-devops-boss.js';
+// import { devopsBoss } from './00-devops-boss.js'; // DevOps boss: disabled
 
 /** Keyboard key → story beat. Each beat is an async function cancelled by reset. */
 export const beats = {
@@ -18,5 +18,5 @@ export const beats = {
   6: playerIntros,
   7: tradingHits,
   8: stageCleared,
-  0: devopsBoss,
+  // 0: devopsBoss, // DevOps boss: disabled
 };

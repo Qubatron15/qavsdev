@@ -19,14 +19,33 @@ npm run preview    # serve dist/ locally
 
 ## Controls
 
+### Fight (two players, one keyboard)
+
+| Action | Kuba (left side) | Emilia (right side)          |
+| ------ | ---------------- | ---------------------------- |
+| Move   | `A` / `D`        | `←` / `→`                    |
+| Jump   | `W`              | `↑`                          |
+| Block  | hold `S`         | hold `↓`                     |
+| Throw  | `F` (or `G`)     | `Enter` (or `L`, numpad `0`) |
+
+`Space` starts a match (and a rematch after the match ends). Best of three rounds, 60 s each.
+
+- **Floppy throw:** 8–12 damage, +2 per combo hit (hits within 1.6 s, max +6), 12% chance of a ×1.5 critical. One floppy in flight per player.
+- **Block:** only on the ground; takes 20% chip damage, no hit stun, breaks the attacker's combo. You can't move or throw while blocking.
+- **Jump** over a floppy to dodge it. Two floppies that meet mid-air cancel out.
+- A round ends on K.O. or when the timer runs out (more health wins). Taking a round at full health is a PERFECT.
+
+### Talk
+
 | Key       | Action                                                   |
 | --------- | -------------------------------------------------------- |
 | `1` – `8` | Play a story beat                                        |
-| `0`       | DevOps boss ("production died")                          |
 | `C`       | Flip to / from the editable case-study slide             |
 | `R`       | Reset the arena (also cancels a beat that is mid-flight) |
 | `M`       | Mute / unmute (or click the sound label)                 |
 | `Esc`     | Leave an edited text box on the case-study slide         |
+
+The DevOps boss (`0`) is currently commented out; search for `DevOps boss: disabled` to restore it.
 
 Audio starts on the first key press because browsers block sound until the user interacts with the page.
 
@@ -37,7 +56,7 @@ index.html              markup: arena, HUD, boss scene, case-study slide
 src/
   main.js               entry point: styles, sprites, input, initial reset
   assets/
-    sprites/            fighter sprite sheets (jakub.png, emi_stand.png, emi_throw.png)
+    sprites/            fighter poses: kuba_/emi_ stand, throw, block, hit
     props/              scene props (guitar, floppy, masks, radar console)
   styles/               base, scene, hud, effects, boss, case-study
   js/
@@ -46,7 +65,8 @@ src/
     timing.js           sleep() / wait(): a reset cancels running beats
     stage.js            scales the fixed 960×540 stage to the window
     audio.js            Web Audio synth and the sfx.* sound effects
-    sprites.js          pixel-art boss sprite, fighter sprite + portrait loader
+    sprites.js          fighter pose loader (setPose / flashPose) + HUD portraits
+    fight.js            two-player fight: input, physics, floppies, damage, rounds
     effects.js          projectiles, floating text, banners, sparks, shake, lunge, hurt
     hud.js              health bars, damage, caption
     caseStudy.js        arena ↔ case-study flip

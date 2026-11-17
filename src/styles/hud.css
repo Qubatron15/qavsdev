@@ -113,3 +113,21 @@
 #vs.red small {
   color: #ff2020;
 }
+
+/* Fight timer: no blinking while a round is on */
+#vs.timer small {
+  font-size: 22px;
+  animation: none;
+}
+
+#vs.timer.red small {
+  animation: blink 0.5s steps(2) infinite;
+}
+
+/* Round wins */
+.wins {
+  color: var(--gold);
+  font-size: 10px;
+  margin: 0 6px;
+  letter-spacing: 2px;
+}
