@@ -2,6 +2,7 @@ import './styles/base.css';
 import './styles/scene.css';
 import './styles/hud.css';
 import './styles/effects.css';
+import './styles/flashy.css';
 // import './styles/boss.css'; // DevOps boss: disabled
 import './styles/case-study.css';
 
@@ -21,8 +22,10 @@ import { loadFighter } from './js/sprites.js';
 // import { createBossSprite } from './js/sprites.js'; // DevOps boss: disabled
 import { initInput } from './js/input.js';
 import { resetArena } from './js/reset.js';
+import { initAmbient } from './js/flashy.js';
 
 initStageScaling();
+initAmbient();
 // createBossSprite(); // DevOps boss: disabled
 loadFighter(
   0,

@@ -91,6 +91,28 @@ export const sfx = {
   fight() {
     arpeggio([392, 392, 523, 659, 784], 'square', 0.18, 0.15, 0.1);
   },
+  /** Super flash: rising sweep, sizzle and a bright stab. */
+  superFlash() {
+    tone(180, 'sawtooth', 0.4, 0.16, 1800);
+    tone(360, 'square', 0.35, 0.07, 2600, 0.03);
+    noise(0.45, 0.25, 7000);
+    arpeggio([1047, 1319, 1568, 2093], 'square', 0.1, 0.06, 0.04);
+  },
+  /** Heavy hit on top of sfx.hit: sub thump and a crack. */
+  heavy() {
+    tone(65, 'sine', 0.4, 0.55, 28);
+    tone(2200, 'square', 0.04, 0.08, 500);
+    noise(0.35, 0.45, 5000);
+  },
+  /** Guard: bright metallic ping. */
+  guard() {
+    tone(1500, 'triangle', 0.18, 0.15, 2400);
+    tone(2250, 'sine', 0.12, 0.08, 0, 0.02);
+    noise(0.12, 0.2, 9000);
+  },
+  sparkle() {
+    arpeggio([1568, 2093, 2637, 3136], 'triangle', 0.09, 0.06, 0.035);
+  },
 };
 
 export function toggleMute() {

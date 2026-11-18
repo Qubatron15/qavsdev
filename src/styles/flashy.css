@@ -1,0 +1,576 @@
+/*
+ * Fighting-game flash (built by js/flashy.js): layers, hit sparks, super flash, cut-ins,
+ * combo counter, banners, ambient light and fighter auras.
+ */
+
+/* ── Layers ──────────────────────────────────────────────────────────────── */
+
+/* The camera. Below the HUD; its contents keep their old stacking order. */
+#world {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+}
+
+/* Frozen during hit stop: the fighters' idle bob pauses too */
+#world.frozen .fighter img {
+  animation-play-state: paused;
+}
+
+#ambient {
+  position: absolute;
+  inset: 80px 0 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: screen;
+}
+
+#dim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  background: #000;
+}
+
+#fx-top {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#fx-top > * {
+  position: absolute;
+}
+
+#vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+  box-shadow:
+    inset 0 0 90px 20px #ff0020,
+    inset 0 0 220px 40px #80001080;
+}
+
+#vignette.danger {
+  opacity: 1;
+  animation: danger-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes danger-pulse {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.85;
+  }
+}
+
+/* ── Ambient: god rays, motes, floor sheen ───────────────────────────────── */
+
+.godrays {
+  position: absolute;
+  left: 50%;
+  top: -260px;
+  width: 1400px;
+  height: 1400px;
+  margin-left: -700px;
+  opacity: 0.16;
+  background: repeating-conic-gradient(from 0deg, #fff 0 3deg, #0000 3deg 15deg);
+  mask-image: radial-gradient(circle, #000 0, #0008 30%, #0000 60%);
+  animation: godrays-spin 40s linear infinite;
+}
+
+.godrays.b {
+  opacity: 0.1;
+  background: repeating-conic-gradient(
+    from 7deg,
+    #ff3fa4 0 2deg,
+    #0000 2deg 11deg,
+    #00e5ff 11deg 13deg,
+    #0000 13deg 24deg
+  );
+  animation-duration: 55s;
+  animation-direction: reverse;
+}
+
+@keyframes godrays-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.floor-sheen {
+  position: absolute;
+  left: -300px;
+  bottom: 0;
+  width: 260px;
+  height: 64px;
+  background: linear-gradient(90deg, #0000, #ffffff30, #0000);
+  transform: skewX(-35deg);
+  animation: sheen 5s ease-in-out infinite;
+}
+
+@keyframes sheen {
+  0%,
+  40% {
+    left: -300px;
+  }
+  100% {
+    left: 1100px;
+  }
+}
+
+.mote {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow:
+    0 0 6px 1px var(--c),
+    0 0 14px 2px var(--c);
+  animation:
+    mote-rise linear infinite,
+    mote-twinkle ease-in-out infinite alternate;
+}
+
+@keyframes mote-rise {
+  from {
+    transform: translate(0, 60px);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--drift), -380px);
+    opacity: 0;
+  }
+}
+
+@keyframes mote-twinkle {
+  to {
+    scale: 0.3;
+  }
+}
+
+/* ── Fighters: rim light, super aura, danger ─────────────────────────────── */
+
+#fighter-dev {
+  --rim: #0ffa;
+}
+
+#fighter-qa {
+  --rim: #f6aa;
+}
+
+/* Rim light; class-based so .blocking / .ko / .winner filters still win */
+.fighter img {
+  filter: drop-shadow(0 0 3px var(--rim)) drop-shadow(0 0 10px var(--rim));
+}
+
+.fighter.danger img {
+  animation:
+    bob 1s steps(2) infinite,
+    danger-glow 0.5s ease-in-out infinite alternate;
+}
+
+.fighter.danger.airborne img,
+.fighter.danger.blocking img {
+  animation: danger-glow 0.5s ease-in-out infinite alternate;
+}
+
+/* Getting hit always shows the hurt flash, whatever glow is on */
+.fighter.fighter.hit img {
+  animation: hurt 0.4s;
+}
+
+@keyframes danger-glow {
+  from {
+    filter: drop-shadow(0 0 4px #f00);
+  }
+  to {
+    filter: drop-shadow(0 0 14px #f00) drop-shadow(0 0 24px #f30) brightness(1.15);
+  }
+}
+
+.fighter.super img {
+  animation: super-glow 0.12s steps(2) infinite;
+}
+
+@keyframes super-glow {
+  from {
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 16px var(--aura))
+      drop-shadow(0 0 30px var(--aura)) brightness(1.2);
+  }
+  to {
+    filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 24px var(--aura))
+      drop-shadow(0 0 44px var(--aura)) brightness(1.45);
+  }
+}
+
+/* Aura flames licking up behind a powered-up fighter */
+.fighter.super::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  height: 260px;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 50% 70% at 50% 100%, var(--aura), #0000 70%),
+    repeating-linear-gradient(90deg, #fff0 0 10px, #fff6 10px 12px);
+  mask-image: linear-gradient(#0000, #000 40%);
+  mix-blend-mode: screen;
+  filter: blur(2px);
+  animation: aura-flame 0.18s steps(2) infinite;
+  pointer-events: none;
+}
+
+@keyframes aura-flame {
+  from {
+    transform: scaleY(0.92) skewX(4deg);
+    opacity: 0.75;
+  }
+  to {
+    transform: scaleY(1.06) skewX(-4deg);
+    opacity: 1;
+  }
+}
+
+.fighter.ko img {
+  filter: grayscale(0.6) drop-shadow(0 0 10px #f00);
+}
+
+.fighter.winner img {
+  filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 20px var(--gold));
+}
+
+/* ── Particles ───────────────────────────────────────────────────────────── */
+
+.fx-screen {
+  inset: 0;
+  mix-blend-mode: screen;
+}
+
+.fx-core {
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 18%, var(--c) 40%, #0000 70%);
+  mix-blend-mode: screen;
+  z-index: 3;
+}
+
+.fx-burst {
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    var(--c) 0 3deg,
+    #0000 3deg 14deg,
+    var(--c) 14deg 15deg,
+    #0000 15deg 24deg
+  );
+  mask-image: radial-gradient(circle, #0000 8%, #000 18%, #0008 40%, #0000 70%);
+  mix-blend-mode: screen;
+  z-index: 2;
+}
+
+.fx-burst.giant {
+  background: repeating-conic-gradient(#fff 0 2deg, var(--c) 2deg 5deg, #0000 5deg 13deg);
+  mask-image: radial-gradient(circle, #0000 3%, #000 10%, #0009 35%, #0000 62%);
+}
+
+.fx-ring {
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 4px solid var(--c);
+  box-shadow:
+    0 0 12px var(--c),
+    inset 0 0 12px var(--c);
+  z-index: 2;
+}
+
+.fx-slash {
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #0000, #fff 30%, #fff 70%, #0000);
+  box-shadow:
+    0 0 10px var(--c),
+    0 0 22px var(--c);
+  z-index: 4;
+}
+
+.fx-streak {
+  width: 46px;
+  height: 3px;
+  margin-top: -1px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, #0000, var(--c));
+  box-shadow: 0 0 6px var(--c);
+  z-index: 3;
+}
+
+.fx-shard {
+  width: 12px;
+  height: 22px;
+  margin: -11px 0 0 -6px;
+  background: linear-gradient(#fff, var(--c));
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  filter: drop-shadow(0 0 4px var(--c));
+  z-index: 3;
+}
+
+.fx-sparkle {
+  background: radial-gradient(circle, #fff 0 15%, var(--c) 35%, #0000 60%);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  filter: drop-shadow(0 0 4px var(--c));
+  z-index: 4;
+}
+
+.fx-hex {
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background:
+    radial-gradient(circle, #0000 35%, var(--c) 80%, #fff 95%),
+    repeating-linear-gradient(60deg, #fff3 0 2px, #0000 2px 10px);
+  mix-blend-mode: screen;
+  z-index: 3;
+}
+
+.fx-hex.inner {
+  background: radial-gradient(circle, #fff8, #0000 70%);
+}
+
+.fx-dust {
+  border-radius: 50%;
+  background: radial-gradient(circle, #fffd, #ccc8 50%, #0000 72%);
+  z-index: 1;
+}
+
+.fx-groundwave {
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 50%;
+  border: 3px solid #fffa;
+  box-shadow: 0 0 10px #fff;
+  z-index: 1;
+}
+
+.fx-trail {
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 20%, var(--c) 45%, #0000 70%);
+  mix-blend-mode: screen;
+  z-index: 5;
+}
+
+.fx-ghost {
+  image-rendering: pixelated;
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
+.fx-pillar {
+  top: 0;
+  transform-origin: 50% 100%;
+  background:
+    linear-gradient(90deg, #0000, #fff8 40%, #fff 50%, #fff8 60%, #0000),
+    linear-gradient(#0000, var(--c) 50%, var(--c));
+  mask-image: linear-gradient(90deg, #0000, #000 30%, #000 70%, #0000);
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
+.fx-pool {
+  height: 36px;
+  margin-top: -18px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #fff, var(--c) 35%, #0000 70%);
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
+/* ── Super flash ─────────────────────────────────────────────────────────── */
+
+.fx-speedlines {
+  inset: 0;
+  background: repeating-conic-gradient(
+    from var(--from) at var(--x) var(--y),
+    var(--c) 0 0.8deg,
+    #0000 0.8deg 5deg,
+    var(--c) 5deg 5.4deg,
+    #0000 5.4deg 9deg
+  );
+  mask-image: radial-gradient(circle at var(--x) var(--y), #0000 110px, #000 360px);
+  mix-blend-mode: screen;
+}
+
+.letterbox {
+  left: 0;
+  right: 0;
+  height: 46px;
+  background: #000;
+  z-index: 2;
+}
+
+.letterbox.top {
+  top: 0;
+  transform-origin: 50% 0;
+}
+
+.letterbox.bottom {
+  bottom: 0;
+  transform-origin: 50% 100%;
+}
+
+.cutin {
+  left: 0;
+  right: 0;
+  top: 175px;
+  height: 150px;
+  z-index: 3;
+}
+
+.cutin-band {
+  position: absolute;
+  inset: 0 -80px;
+  overflow: hidden;
+  transform-origin: 50% 50%;
+  background:
+    repeating-linear-gradient(-60deg, #fff1 0 6px, #0000 6px 18px),
+    linear-gradient(90deg, #000 0%, var(--c) 30%, #000 50%, var(--c) 75%, #000 100%);
+  border-top: 5px solid #fff;
+  border-bottom: 5px solid #fff;
+  box-shadow:
+    0 0 0 3px var(--c),
+    0 0 40px var(--c),
+    0 0 90px var(--c);
+  clip-path: polygon(0 12%, 100% 0, 100% 88%, 0 100%);
+  animation: band-stripes 0.3s linear infinite;
+}
+
+@keyframes band-stripes {
+  to {
+    background-position:
+      -42px 0,
+      0 0;
+  }
+}
+
+.cutin-face {
+  position: absolute;
+  top: -70px;
+  height: 460px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 2px #fff) drop-shadow(6px 0 0 #0008);
+}
+
+.cutin.left .cutin-face {
+  left: 120px;
+}
+
+.cutin.right .cutin-face {
+  right: 120px;
+}
+
+.cutin-name {
+  position: absolute;
+  top: 50%;
+  margin-top: -18px;
+  font-size: 28px;
+  line-height: 36px;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow:
+    -3px 0 #ff2a6d,
+    3px 0 #05d9e8,
+    4px 4px 0 #000,
+    0 0 24px var(--c);
+}
+
+.cutin.left .cutin-name {
+  right: 140px;
+}
+
+.cutin.right .cutin-name {
+  left: 140px;
+}
+
+.fx-wipe {
+  left: -10%;
+  width: 120%;
+  height: 34px;
+  background: linear-gradient(90deg, #0000, #ff3fa4 20%, #fff 50%, #00e5ff 80%, #0000);
+  opacity: 0.85;
+  mix-blend-mode: screen;
+}
+
+/* ── Text ────────────────────────────────────────────────────────────────── */
+
+.slam-text {
+  white-space: nowrap;
+  text-shadow:
+    -2px 0 #ff2a6d,
+    2px 0 #05d9e8,
+    3px 3px 0 #000,
+    0 0 16px currentColor;
+  z-index: 4;
+}
+
+.combo-counter {
+  top: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transform: skewX(-12deg);
+  transition: opacity 0.25s;
+}
+
+.combo-counter.p0 {
+  left: 28px;
+}
+
+.combo-counter.p1 {
+  right: 28px;
+  align-items: flex-end;
+}
+
+.combo-counter.off {
+  opacity: 0;
+}
+
+.combo-counter b {
+  font-size: 64px;
+  line-height: 1;
+  color: #ffea00;
+  background: linear-gradient(#fff 0 20%, #ffea00 45%, #ff6a00 80%, #ff0040);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(4px 4px 0 #000) drop-shadow(0 0 12px #ff6a00);
+}
+
+.combo-counter span {
+  font-size: 18px;
+  color: #fff;
+  text-shadow:
+    3px 3px 0 #b30000,
+    0 0 12px #ff3fa4;
+  margin-top: 6px;
+}
+
+.combo-counter i {
+  font-style: normal;
+  font-size: 10px;
+  color: #0ff;
+  margin-top: 8px;
+  text-shadow: 2px 2px #000;
+}

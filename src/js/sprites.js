@@ -160,3 +160,6 @@ export function flashPose(player, name, duration) {
   setPose(player, name);
   entry.timer = setTimeout(() => setPose(player, 'stand'), duration);
 }
+
+/** Image URL of a pose (for cut-ins and afterimages). */
+export const poseSrc = (player, name) => fighters[player]?.images[name]?.src ?? '';

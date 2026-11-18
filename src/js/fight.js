@@ -8,6 +8,27 @@ import { $, fighter } from './dom.js';
 import { state } from './state.js';
 import { sfx } from './audio.js';
 import { banner, popText, shake, sparks } from './effects.js';
+import {
+  afterimage,
+  aura,
+  clearFlashy,
+  comboCounter,
+  dust,
+  fightBurst,
+  guardFlash,
+  hudHit,
+  impact,
+  koBlast,
+  muzzle,
+  roundIntro,
+  screenFlash,
+  setDanger,
+  slamText,
+  superFlash,
+  trail,
+  victory,
+  zoom,
+} from './flashy.js';
 import { setCaption, setHealth } from './hud.js';
 import { FIGHTER_HEIGHT, setPose } from './sprites.js';
 
@@ -96,6 +117,26 @@ const BLOCK_KNOCKBACK = 14; // px
 
 const NAMES = ['JAKUB', 'EMILIA'];
 const COLORS = ['#0ff', '#f6a'];
+
+// ── Effects tuning (see flashy.js) ──────────────────────────────────────────
+/** Per attack: effect colour and the tint of the dimmed background while it plays. */
+const ATTACK_FX = {
+  docs: { color: '#00e5ff', tint: '#0050ff' },
+  bugs: { color: '#ff3fa4', tint: '#b0006a' },
+  hotfix: { color: '#8c7bff', tint: '#2a0aa0' },
+  codegen: { color: '#39ff8a', tint: '#008a3a' },
+  undocumented: { color: '#00ffe1', tint: '#007a8a' },
+  acs: { color: '#ffd700', tint: '#8a5a00' },
+  priority: { color: '#ff3030', tint: '#9a0000' },
+};
+const SUPER_FREEZE = 0.32; // s the whole fight freezes while a super flash plays
+const HITSTOP = { hit: 0.07, crit: 0.15, heavy: 0.12, block: 0.04, guard: 0.09, clash: 0.1 };
+const KO_FREEZE = 0.45; // s of hitstop on the K.O. hit…
+const KO_SLOWMO = 1.4; // …then this many real seconds…
+const KO_SLOWMO_SCALE = 0.3; // …at this game speed
+const GHOST_HUE = [140, 280]; // afterimage tint per player (cyan, pink)
+const GHOST_INTERVAL = { fast: 0.045, walk: 0.11 }; // s between afterimages
+const TRAIL_INTERVAL = 0.018; // s between projectile trail dots
 
 /*
  * Keymap: one keyboard, no numpad. Each player has a movement cluster plus two rows that line up
@@ -228,6 +269,8 @@ const newFighter = (player) => ({
   combo: 0,
   lastHitAt: -Infinity, // match clock of this fighter's last landed hit
   hitsLanded: 0,
+  ghostTimer: 0, // s until the next afterimage
+  wasAirborne: false, // for landing dust
 });
 
 function newMatch() {
@@ -253,6 +296,9 @@ function newMatch() {
 /** Back to the "press SPACE" screen with fresh fighters. */
 export function resetFight() {
   clearProjectiles();
+  clearFlashy();
+  hitstop = 0;
+  slowmo = 0;
   $('#fx')
     .querySelectorAll('.speech')
     .forEach((el) => el.remove());
@@ -319,6 +365,7 @@ function clearProjectiles() {
 
 function startRound(round) {
   clearProjectiles();
+  clearFlashy();
   match.round = round;
   match.timeLeft = ROUND_TIME;
   match.fighters.forEach((f) => {
@@ -356,13 +403,21 @@ function endRound(reason) {
 
   if (reason === 'ko') {
     const loser = winner ? match.fighters[1 - winner.player] : null;
-    for (const f of loser ? [loser] : match.fighters) fighter(f.player).classList.add('ko');
+    for (const f of loser ? [loser] : match.fighters) {
+      fighter(f.player).classList.add('ko');
+      koBlast(f.x, toStageY(f.y + FIGHTER_HEIGHT / 2), COLORS[1 - f.player]);
+    }
+    freeze(KO_FREEZE);
+    slowmo = KO_SLOWMO;
     sfx.boom();
-    shake();
-    banner(winner ? 'K.O.!' : 'DOUBLE K.O.!', '', 1600);
+    sfx.heavy();
+    shake(3);
+    banner(winner ? 'K.O.' : 'DOUBLE K.O.', 'ko', 2000);
   } else {
     sfx.siren();
-    banner('TIME!', '', 1600);
+    screenFlash('#ff2a2a', 300, 0.5);
+    zoom(480, 300, 1.08, 1200);
+    banner('TIME!', 'ko', 1600);
   }
   updateHud();
 }
@@ -373,11 +428,16 @@ function updatePhase(dt) {
   if (match.phase === 'intro') {
     at(0, 'round', () => {
       banner('ROUND ' + match.round, '', 1100);
+      roundIntro(match.round);
       sfx.zap();
+      sfx.sparkle();
     });
     at(1.2, 'fight', () => {
-      banner('FIGHT!', '', 900);
+      banner('FIGHT!', 'fight', 900);
+      fightBurst();
       sfx.fight();
+      sfx.superFlash();
+      for (const f of match.fighters) aura(f.player, COLORS[f.player], 900);
       setPhase('fight');
     });
   } else if (match.phase === 'fight') {
@@ -388,7 +448,9 @@ function updatePhase(dt) {
     at(1.7, 'result', () => {
       if (winner) {
         fighter(winner.player).classList.add('winner');
+        victory(winner.player, winner.x, toStageY(winner.y), COLORS[winner.player]);
         const perfect = winner.health === MAX_HEALTH;
+        if (perfect) screenFlash('#ffd700', 400, 0.6);
         banner(
           NAMES[winner.player] + ' WINS' + (perfect ? '<br>PERFECT!' : ''),
           perfect ? '' : 'small',
@@ -448,6 +510,7 @@ function updateFighter(f, dt) {
     if (taps.has('jump') && grounded) {
       f.vy = JUMP_VELOCITY;
       sfx.zap();
+      dust(f.x, toStageY(0), 1.1);
     }
     if (taps.has('throw')) tryThrow(f);
     if (taps.has('bugs')) tryBugs(f);
@@ -460,6 +523,17 @@ function updateFighter(f, dt) {
     f.vy -= GRAVITY * dt;
     f.y = Math.max(0, f.y + f.vy * dt);
     if (f.y === 0) f.vy = 0;
+  }
+  if (f.wasAirborne && f.y === 0) dust(f.x, toStageY(0), 1.3);
+  f.wasAirborne = f.y > 0;
+
+  // Afterimages: dense while jumping, attacking or reeling from a hit, sparse while walking.
+  const walking = active && (keys.has('left') || keys.has('right')) && !f.blocking && !f.guard;
+  const fast = f.y > 0 || f.throwTimer > 0 || (f.stun > 0 && f.stunPose === 'hit');
+  f.ghostTimer -= dt;
+  if ((fast || walking) && f.ghostTimer <= 0 && match.phase !== 'ready') {
+    f.ghostTimer = fast ? GHOST_INTERVAL.fast : GHOST_INTERVAL.walk;
+    afterimage(f.player, GHOST_HUE[f.player], fast ? 0.55 : 0.3);
   }
 }
 
@@ -506,6 +580,7 @@ function tryThrow(f) {
   f.throwTimer = THROW_POSE_TIME;
   f.cooldown = THROW_COOLDOWN;
   sfx.whoosh();
+  muzzle(f.x + f.dir * 60, toStageY(f.y + FLOPPY_HEIGHT), COLORS[f.player]);
 
   const el = document.createElement('img');
   el.src = floppySrc;
@@ -518,6 +593,7 @@ function tryThrow(f) {
     y: f.y + FLOPPY_HEIGHT, // centre height above the ground
     vx: f.dir * FLOPPY_SPEED,
     spin: 0,
+    trail: 0,
     el,
   });
 }
@@ -528,6 +604,7 @@ function tryBugs(f) {
   f.throwTimer = BUG_WINDUP + BUG_INTERVAL * (BUG_COUNT - 1) + THROW_POSE_TIME;
   f.swarmCooldown = BUG_COOLDOWN;
   sfx.whoosh();
+  flashFor(f, 'bugs', 'bug swarm', SWARM_MS);
   match.bugVolley = { spawnsLeft: BUG_COUNT, timer: BUG_WINDUP, resolved: false };
 }
 
@@ -538,10 +615,31 @@ function tryDocs(f) {
   f.swarmCooldown = BUG_COOLDOWN;
   sfx.whoosh();
   showSpeech(f, DOC_QUIP);
+  flashFor(f, 'docs', 'no docs, no bugs', SWARM_MS);
   match.docVolley = { spawnsLeft: BUG_COUNT, timer: BUG_WINDUP, resolved: false };
 }
 
 const ownerOf = (special) => SPECIALS[special.kind].owner;
+
+/** How long the background stays dimmed for a swarm (ms of real time, before the freeze). */
+const SWARM_MS = (BUG_WINDUP + BUG_INTERVAL * (BUG_COUNT - 1) + 0.9) * 1000;
+
+/** Super flash for fighter `f` starting attack `kind`: freezes the fight for SUPER_FREEZE. */
+function flashFor(f, kind, name, ms) {
+  const { color, tint } = ATTACK_FX[kind];
+  superFlash({
+    player: f.player,
+    x: f.x,
+    y: toStageY(f.y + FIGHTER_HEIGHT * 0.55),
+    footY: toStageY(f.y),
+    color,
+    tint,
+    name,
+    holdMs: ms + SUPER_FREEZE * 1000,
+  });
+  sfx.superFlash();
+  freeze(SUPER_FREEZE);
+}
 
 /** A fighter starts one of their specials: announce it, then let updateSpecials play it out. */
 function trySpecial(f, kind) {
@@ -551,6 +649,12 @@ function trySpecial(f, kind) {
   f.swarmCooldown = BUG_COOLDOWN;
   sfx.whoosh();
   showSpeech(f, SPECIALS[kind].name);
+  flashFor(
+    f,
+    kind,
+    SPECIALS[kind].name,
+    (SPECIAL_WINDUP + SPECIALS[kind].duration + SPECIAL_FADE) * 1000,
+  );
   match.specials.push({ kind, t: -SPECIAL_WINDUP, hits: 0, el: null });
 }
 
@@ -578,8 +682,11 @@ function updateSpecials(dt) {
       };
       if (target.guard === special.kind) {
         sfx.zap();
+        sfx.guard();
         sparks(point.x, toStageY(point.y), '#ffd700');
-        popText('BLOCK!', target.x - 40, toStageY(point.y) - 60, '#ffd700', 14);
+        guardFlash(point.x, toStageY(point.y), '#ffd700', target.dir);
+        slamText('PERFECT GUARD!', target.x, toStageY(point.y) - 70, '#ffd700', 15);
+        freeze(HITSTOP.guard);
       } else {
         landHit(attacker, target, point, { unblockable: true, multiplier: spec.damage ?? 1 });
       }
@@ -851,11 +958,14 @@ const pick = (list) => list[Math.floor(Math.random() * list.length)];
  */
 function blockSwarm(defender, projectile, volley, quips) {
   sparks(projectile.x, toStageY(projectile.y), '#ffd700');
+  guardFlash(projectile.x, toStageY(projectile.y), '#ffd700', defender.dir);
   sfx.zap();
   if (volley && !volley.resolved) {
     volley.resolved = true;
+    sfx.guard();
+    freeze(HITSTOP.guard);
     sparks(defender.x, toStageY(defender.y + 120), '#ffd700');
-    popText('BLOCK!', defender.x - 40, toStageY(projectile.y) - 60, '#ffd700', 14);
+    slamText('PERFECT GUARD!', defender.x, toStageY(projectile.y) - 70, '#ffd700', 15);
     showSpeech(defender, pick(quips));
   }
 }
@@ -889,6 +999,7 @@ function updateBugs(dt) {
   const kuba = match.fighters[0];
   for (const bug of match.bugs) {
     bug.x += bug.vx * dt;
+    leaveTrail(bug, dt, ATTACK_FX.bugs.color, 24);
     const reached = bug.vx < 0 ? bug.x <= kuba.x : bug.x >= kuba.x;
     const offscreen = bug.x < -BUG_WIDTH || bug.x > 960 + BUG_WIDTH;
     if (!reached && !offscreen) continue;
@@ -901,6 +1012,7 @@ function updateBugs(dt) {
       landHit(match.fighters[1], kuba, bug, { unblockable: true });
     } else {
       sparks(bug.x, toStageY(bug.y), COLORS[1]);
+      impact(bug.x, toStageY(bug.y), COLORS[1], 0.5);
     }
   }
 
@@ -927,6 +1039,7 @@ function updateDocs(dt) {
   const emi = match.fighters[1];
   for (const doc of match.docs) {
     doc.x += doc.vx * dt;
+    leaveTrail(doc, dt, ATTACK_FX.docs.color, 22);
     const reached = doc.vx < 0 ? doc.x <= emi.x : doc.x >= emi.x;
     const offscreen = doc.x < -DOC_SIZE || doc.x > 960 + DOC_SIZE;
     if (!reached && !offscreen) continue;
@@ -939,6 +1052,7 @@ function updateDocs(dt) {
       landHit(match.fighters[0], emi, doc, { unblockable: true });
     } else {
       sparks(doc.x, toStageY(doc.y), COLORS[0]);
+      impact(doc.x, toStageY(doc.y), COLORS[0], 0.5);
     }
   }
 
@@ -975,6 +1089,14 @@ const overlaps = (floppy, f) =>
   floppy.y + FLOPPY_SIZE / 2 > f.y &&
   floppy.y - FLOPPY_SIZE / 2 < f.y + HURTBOX_HEIGHT;
 
+/** A projectile drops a glowing trail dot every TRAIL_INTERVAL. */
+function leaveTrail(p, dt, color, size) {
+  p.trail = (p.trail ?? 0) - dt;
+  if (p.trail > 0) return;
+  p.trail = TRAIL_INTERVAL;
+  trail(p.x - Math.sign(p.vx) * 12, toStageY(p.y), color, size);
+}
+
 /** Stage-pixel position of a point `height` px above the ground. */
 const toStageY = (height) => 540 - GROUND - height;
 
@@ -982,6 +1104,7 @@ function updateFloppies(dt) {
   for (const p of match.floppies) {
     p.x += p.vx * dt;
     p.spin += dt * 720 * Math.sign(p.vx);
+    leaveTrail(p, dt, COLORS[p.owner], 20);
   }
 
   // Floppy vs floppy: both shatter.
@@ -991,7 +1114,13 @@ function updateFloppies(dt) {
     sparks(x, toStageY(p0.y), '#ff0');
     sparks(x, toStageY(p0.y), '#0ff');
     popText('CLASH!', x - 40, toStageY(p0.y) - 40, '#fff', 16);
+    impact(x, toStageY(p0.y), '#fff', 1.3);
+    impact(x, toStageY(p0.y), '#ffd700', 0.8);
+    slamText('CLASH!', x, toStageY(p0.y) - 60, '#fff', 22);
+    freeze(HITSTOP.clash);
+    shake(1.5);
     sfx.hit();
+    sfx.guard();
     p0.dead = p1.dead = true;
   }
 
@@ -1033,6 +1162,8 @@ function landHit(attacker, defender, projectile, { unblockable = false, multipli
   const blocked =
     !unblockable && (defender.blocking || (defender.stun > 0 && defender.stunPose === 'block'));
 
+  // Hit while winding up an attack: a counter hit (looks louder, same damage).
+  const counterHit = !blocked && defender.throwTimer > 0;
   const chained = match.clock - attacker.lastHitAt <= COMBO_WINDOW;
   attacker.combo = blocked ? 0 : chained ? attacker.combo + 1 : 1;
   attacker.lastHitAt = blocked ? -Infinity : match.clock;
@@ -1055,7 +1186,11 @@ function landHit(attacker, defender, projectile, { unblockable = false, multipli
     defender.stun = BLOCK_STUN;
     defender.stunPose = 'block';
     sfx.zap();
+    sfx.guard();
     sparks(hitX, hitY, '#ffd700');
+    guardFlash(hitX, hitY, '#ffd700', defender.dir);
+    dust(defender.x, toStageY(0), 0.7);
+    freeze(HITSTOP.block);
     popText('BLOCK! -' + amount, popX, hitY - 60, '#ffd700', 14);
   } else {
     attacker.hitsLanded++;
@@ -1068,15 +1203,27 @@ function landHit(attacker, defender, projectile, { unblockable = false, multipli
     el.classList.add('hit');
     setTimeout(() => el.classList.remove('hit'), 400);
     sfx.hit();
-    sparks(hitX, hitY, COLORS[attacker.player]);
+    const heavy = crit || multiplier > 1 || counterHit;
+    if (heavy) sfx.heavy();
+    const color = COLORS[attacker.player];
+    const power = 1 + (crit ? 0.6 : 0) + (multiplier > 1 ? 0.4 : 0) + (unblockable ? 0.2 : 0);
+    sparks(hitX, hitY, color);
+    impact(hitX, hitY, color, power);
+    dust(defender.x, toStageY(0), 0.9);
+    hudHit(defender.player, heavy);
+    freeze(crit ? HITSTOP.crit : heavy ? HITSTOP.heavy : HITSTOP.hit);
+    shake(heavy ? 2 : 0.8);
     popText('-' + amount + ' HP', popX, hitY - 60, '#f66', crit ? 22 : 16);
     if (crit) {
-      shake();
-      popText('CRITICAL!', popX - 20, hitY - 100, '#ff0', 18);
+      screenFlash(color, 160, 0.45);
+      zoom(hitX, hitY, 1.18, 500);
+      slamText('CRITICAL!', hitX, hitY - 110, '#ffea00', 24);
     }
-    if (attacker.combo >= 2) {
-      popText(attacker.combo + ' HIT COMBO!', attacker.player ? 600 : 90, 200, '#ff0', 16);
+    if (counterHit) {
+      slamText('COUNTER!', defender.x, toStageY(defender.y + FIGHTER_HEIGHT) - 20, '#ff2a2a', 22);
+      screenFlash('#ff0030', 120, 0.35);
     }
+    comboCounter(attacker.player, attacker.combo);
   }
 
   updateHud();
@@ -1140,6 +1287,7 @@ function updateHud() {
   const [a, b] = match.fighters;
   setHealth(a.health, b.health);
   for (const f of match.fighters) {
+    setDanger(f.player, match.phase !== 'ready' && f.health > 0 && f.health <= DANGER_HEALTH);
     $('#wins-' + f.player).textContent =
       '★'.repeat(f.wins) + '☆'.repeat(Math.max(0, ROUNDS_TO_WIN - f.wins));
   }
@@ -1160,6 +1308,13 @@ function updateHud() {
 
 const STEP = 1 / 120; // fixed simulation step (s)
 let accumulator = 0;
+let hitstop = 0; // s of real time left in which the simulation is frozen
+let slowmo = 0; // s of real time left in K.O. slow motion
+
+/** Freeze the fight for `seconds` (hit stop, super flash); overlapping freezes don't add up. */
+function freeze(seconds) {
+  hitstop = Math.max(hitstop, seconds);
+}
 
 function step(dt) {
   match.clock += dt;
@@ -1182,7 +1337,18 @@ function loop(now) {
   const elapsed = Math.min(0.1, (now - lastTime) / 1000); // clamp after tab switches
   lastTime = now;
   if (!state.caseStudyOpen && match.phase !== 'ready') {
-    accumulator += elapsed;
+    let gameTime = elapsed;
+    if (hitstop > 0) {
+      const frozen = Math.min(hitstop, gameTime);
+      hitstop -= frozen;
+      gameTime -= frozen;
+    }
+    if (slowmo > 0 && gameTime > 0) {
+      slowmo = Math.max(0, slowmo - gameTime);
+      gameTime *= KO_SLOWMO_SCALE;
+    }
+    $('#world').classList.toggle('frozen', hitstop > 0);
+    accumulator += gameTime;
     const before = Math.ceil(match.timeLeft);
     while (accumulator >= STEP) {
       step(STEP);

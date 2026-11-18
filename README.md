@@ -67,7 +67,7 @@ src/
       emi/              emi_ stand, throw, block, hit, jump
       kuba/             kuba_ stand, throw, block, hit, jump
     props/              scene props (guitar, floppy, masks, radar console)
-  styles/               base, scene, hud, effects, boss, case-study
+  styles/               base, scene, hud, effects, flashy, boss, case-study
   js/
     state.js            shared state (health, mute, case-study flag, generation)
     dom.js              $ helper and shared element refs
@@ -77,6 +77,7 @@ src/
     sprites.js          fighter pose loader (setPose / flashPose) + HUD portraits
     fight.js            two-player fight: input, physics, floppies, bug swarm, damage, rounds
     effects.js          projectiles, floating text, banners, sparks, shake, lunge, hurt
+    flashy.js           fighting-game flash: hit sparks, super flash + cut-in, dimming, camera, afterimages, trails
     hud.js              health bars, damage, caption
     caseStudy.js        arena ↔ case-study flip
     reset.js            resetArena()

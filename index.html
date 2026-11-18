@@ -23,389 +23,422 @@
           game shelf with a trophy, sofa, bean bag and rug.
           Middle: a pillar with 1P / 2P lamps.
         -->
-        <div id="scene" aria-hidden="true">
-          <!-- ── PC battlestation ────────────────────────────────────── -->
-          <div class="half pc">
-            <div class="rgb-strip"></div>
+        <!-- The camera: everything in here zooms and shakes together; the HUD stays put -->
+        <div id="world">
+          <div id="scene" aria-hidden="true">
+            <!-- ── PC battlestation ────────────────────────────────────── -->
+            <div class="half pc">
+              <div class="rgb-strip"></div>
 
-            <!-- Neon WASD cluster -->
-            <svg class="wasd" viewBox="0 0 120 80" width="120" height="80">
-              <rect x="44" y="4" width="32" height="32" rx="5" />
-              <rect x="6" y="42" width="32" height="32" rx="5" />
-              <rect x="44" y="42" width="32" height="32" rx="5" />
-              <rect x="82" y="42" width="32" height="32" rx="5" />
-              <text x="60" y="27">W</text>
-              <text x="22" y="65">A</text>
-              <text x="60" y="65">S</text>
-              <text class="broken" x="98" y="65">D</text>
-            </svg>
-
-            <!-- Poster: a graphics settings menu, everything maxed -->
-            <div class="settings">
-              <h4>GRAPHICS</h4>
-              <p>TEXTURES<b>ULTRA</b></p>
-              <i></i>
-              <p>SHADOWS<b>ULTRA</b></p>
-              <i></i>
-              <p>RAY TRACING<b>ON</b></p>
-              <i></i>
-              <p>FPS LIMIT<b>OFF</b></p>
-              <i></i>
-            </div>
-
-            <!-- A sock hanging off the neon's D key -->
-            <svg
-              class="neon-sock"
-              viewBox="0 0 16 30"
-              width="16"
-              height="30"
-              shape-rendering="crispEdges"
-            >
-              <rect class="sock" x="4" y="0" width="7" height="22" />
-              <rect class="sock" x="4" y="20" width="12" height="8" />
-              <rect class="stripe" x="4" y="3" width="7" height="2" />
-              <rect class="stripe" x="4" y="7" width="7" height="2" />
-            </svg>
-
-            <!-- Glass-panel tower with spinning RGB fans -->
-            <div class="tower">
-              <div class="glass">
-                <i class="fan"></i><i class="fan"></i><i class="fan"></i>
-                <span class="gpu"></span>
-              </div>
-            </div>
-            <!-- Leftovers piled on top of the tower -->
-            <svg
-              class="tower-top"
-              viewBox="0 0 96 30"
-              width="96"
-              height="30"
-              shape-rendering="crispEdges"
-            >
-              <rect class="box" x="2" y="20" width="74" height="10" />
-              <rect class="box" x="8" y="12" width="70" height="8" transform="rotate(-4 43 16)" />
-              <rect
-                class="box-logo"
-                x="30"
-                y="14"
-                width="16"
-                height="3"
-                transform="rotate(-4 43 16)"
-              />
-              <rect class="can pink" x="80" y="16" width="8" height="14" />
-              <rect class="can green" x="62" y="0" width="8" height="12" />
-            </svg>
-
-            <!-- Monitor running a generic FPS -->
-            <div class="monitor">
-              <svg viewBox="0 0 152 86" width="152" height="86">
-                <rect class="sky" width="152" height="44" />
-                <rect class="ground" y="44" width="152" height="42" />
-                <polygon class="wall-l" points="0,0 52,26 52,58 0,86" />
-                <polygon class="wall-r" points="152,0 100,26 100,58 152,86" />
-                <rect class="door" x="66" y="32" width="20" height="24" />
-                <g class="crosshair">
-                  <rect x="75" y="36" width="2" height="5" />
-                  <rect x="75" y="47" width="2" height="5" />
-                  <rect x="68" y="43" width="5" height="2" />
-                  <rect x="79" y="43" width="5" height="2" />
-                </g>
-                <rect class="hp-bg" x="6" y="76" width="40" height="5" />
-                <rect class="hp" x="6" y="76" width="31" height="5" />
-                <text class="ammo" x="146" y="82">30/90</text>
-                <text class="fps" x="5" y="10">240 FPS</text>
-                <circle class="minimap" cx="136" cy="15" r="11" />
-                <rect class="blip" x="135" y="14" width="3" height="3" />
-                <g class="gun">
-                  <polygon points="86,86 96,60 108,60 116,86" />
-                  <rect x="95" y="55" width="12" height="6" />
-                </g>
+              <!-- Neon WASD cluster -->
+              <svg class="wasd" viewBox="0 0 120 80" width="120" height="80">
+                <rect x="44" y="4" width="32" height="32" rx="5" />
+                <rect x="6" y="42" width="32" height="32" rx="5" />
+                <rect x="44" y="42" width="32" height="32" rx="5" />
+                <rect x="82" y="42" width="32" height="32" rx="5" />
+                <text x="60" y="27">W</text>
+                <text x="22" y="65">A</text>
+                <text x="60" y="65">S</text>
+                <text class="broken" x="98" y="65">D</text>
               </svg>
-            </div>
 
-            <!-- Sticky notes stuck all over the monitor bezel -->
-            <i class="note" style="left: 284px; top: 134px; --rot: -12deg"></i>
-            <i class="note" style="left: 432px; top: 150px; --rot: 9deg; background: #7fe3ff"></i>
-            <i class="note" style="left: 438px; top: 196px; --rot: -6deg; background: #ff9ad5"></i>
+              <!-- Poster: a graphics settings menu, everything maxed -->
+              <div class="settings">
+                <h4>GRAPHICS</h4>
+                <p>TEXTURES<b>ULTRA</b></p>
+                <i></i>
+                <p>SHADOWS<b>ULTRA</b></p>
+                <i></i>
+                <p>RAY TRACING<b>ON</b></p>
+                <i></i>
+                <p>FPS LIMIT<b>OFF</b></p>
+                <i></i>
+              </div>
 
-            <!-- Desk: monitor stand, mechanical keyboard, mouse, headset, RGB mousepad -->
-            <svg
-              class="desk"
-              viewBox="0 0 184 94"
-              width="184"
-              height="94"
-              shape-rendering="crispEdges"
-            >
-              <rect class="stand" x="86" y="0" width="12" height="18" />
-              <rect class="stand" x="72" y="18" width="40" height="4" />
-              <rect class="pad" x="8" y="22" width="168" height="4" />
-              <rect class="kbd" x="14" y="14" width="62" height="8" />
-              <g class="keycaps">
-                <rect x="17" y="15" width="5" height="2" />
-                <rect x="24" y="15" width="5" height="2" />
-                <rect x="31" y="15" width="5" height="2" />
-                <rect x="38" y="15" width="5" height="2" />
-                <rect x="45" y="15" width="5" height="2" />
-                <rect x="52" y="15" width="5" height="2" />
-                <rect x="59" y="15" width="5" height="2" />
-                <rect x="66" y="15" width="7" height="2" />
-                <rect x="17" y="18" width="7" height="2" />
-                <rect x="26" y="18" width="28" height="2" />
-                <rect x="56" y="18" width="7" height="2" />
-                <rect x="65" y="18" width="8" height="2" />
-              </g>
-              <rect class="mouse" x="122" y="15" width="11" height="7" />
-              <rect class="mouse-led" x="126" y="16" width="3" height="2" />
-              <path class="headset" d="M150 20 V10 a10 10 0 0 1 20 0 V20" />
-              <rect class="cup" x="146" y="13" width="7" height="9" />
-              <rect class="cup" x="167" y="13" width="7" height="9" />
-              <!-- clutter -->
-              <rect class="chips" x="0" y="10" width="12" height="16" />
-              <rect class="chips-band" x="0" y="15" width="12" height="4" />
-              <rect class="can green" x="136" y="15" width="6" height="11" />
-              <rect class="can pink" x="112" y="24" width="10" height="2" />
-              <rect class="crumbs" x="80" y="25" width="2" height="1" />
-              <rect class="crumbs" x="90" y="25" width="3" height="1" />
-              <rect class="top" x="0" y="26" width="184" height="8" />
-              <rect class="leg" x="8" y="34" width="8" height="60" />
-              <rect class="leg" x="168" y="34" width="8" height="60" />
-            </svg>
-            <div class="desk-glow"></div>
-
-            <!-- The mess on the floor -->
-            <svg
-              class="mess"
-              viewBox="0 0 380 64"
-              width="380"
-              height="64"
-              shape-rendering="crispEdges"
-            >
-              <!-- tangled cables from the tower to the desk -->
-              <path
-                class="cable"
-                d="M0 50 C20 58 30 38 48 52 S80 62 96 48 S120 40 132 56 S170 60 190 50 S240 44 262 54 S300 60 330 50"
-              />
-              <path class="cable two" d="M0 56 C30 46 44 62 70 54 S110 46 140 58 S200 62 230 52" />
-              <!-- open pizza box, a slice missing -->
-              <polygon class="box-lid" points="34,24 92,24 98,46 40,46" />
-              <rect class="box" x="30" y="46" width="68" height="8" />
-              <path
-                class="pizza"
-                d="M64 50 L64 40 A12 6 0 1 0 76 50 Z"
-                transform="translate(0 -1)"
-              />
-              <rect class="pep" x="56" y="46" width="3" height="2" />
-              <rect class="pep" x="68" y="47" width="3" height="2" />
-              <!-- hoodie heap and a sock -->
-              <path class="hoodie" d="M104 56 C104 40 118 34 132 38 C146 34 160 42 158 56 Z" />
-              <rect class="hoodie-cuff" x="150" y="50" width="12" height="6" />
-              <rect class="sock" x="166" y="52" width="12" height="4" />
-              <rect class="sock" x="174" y="48" width="4" height="6" />
-              <!-- cans: standing, lying, crushed -->
-              <rect class="can green" x="18" y="42" width="7" height="13" />
-              <rect class="can pink" x="186" y="51" width="13" height="6" />
-              <rect class="can green" x="352" y="52" width="9" height="5" />
-              <!-- paper balls -->
-              <rect class="paper" x="8" y="52" width="6" height="5" />
-              <rect class="paper" x="206" y="53" width="5" height="4" />
-              <rect class="paper" x="214" y="50" width="6" height="6" />
-              <rect class="paper" x="330" y="52" width="6" height="5" />
-              <!-- pizza boxes stacked under the desk -->
-              <rect class="box" x="232" y="48" width="62" height="7" />
-              <rect class="box" x="238" y="41" width="62" height="7" />
-              <rect class="box" x="228" y="34" width="62" height="7" />
-              <rect class="box-logo" x="252" y="36" width="14" height="3" />
-            </svg>
-
-            <!-- More junk closer to the camera, and a can pyramid by the pillar -->
-            <svg
-              class="mess-front"
-              viewBox="0 0 460 40"
-              width="460"
-              height="40"
-              shape-rendering="crispEdges"
-            >
-              <rect class="paper" x="96" y="8" width="8" height="7" />
-              <rect class="paper" x="300" y="14" width="7" height="6" />
-              <rect class="paper" x="22" y="20" width="9" height="8" />
-              <rect class="can green" x="58" y="12" width="14" height="7" />
-              <rect class="can pink" x="214" y="22" width="7" height="12" />
-              <rect class="can green" x="350" y="20" width="15" height="7" />
-              <path class="crust" d="M150 20 q14 -10 26 0 l-4 3 q-9 -6 -18 0 Z" />
-              <rect class="sock" x="250" y="8" width="14" height="5" />
-              <rect class="sock" x="260" y="4" width="4" height="7" />
-              <rect
-                class="chips"
-                x="388"
-                y="10"
-                width="20"
-                height="12"
-                transform="rotate(20 398 16)"
-              />
-              <rect
-                class="chips-band"
-                x="388"
-                y="14"
-                width="20"
-                height="4"
-                transform="rotate(20 398 16)"
-              />
-              <rect class="paper" x="430" y="18" width="7" height="6" />
-              <path class="cable" d="M0 30 C40 24 60 38 110 30 S180 22 230 32" />
-            </svg>
-            <svg
-              class="can-pyramid"
-              viewBox="0 0 34 42"
-              width="34"
-              height="42"
-              shape-rendering="crispEdges"
-            >
-              <rect class="can green" x="0" y="28" width="10" height="14" />
-              <rect class="can pink" x="12" y="28" width="10" height="14" />
-              <rect class="can green" x="24" y="28" width="10" height="14" />
-              <rect class="can pink" x="6" y="14" width="10" height="14" />
-              <rect class="can green" x="18" y="14" width="10" height="14" />
-              <rect class="can pink" x="12" y="0" width="10" height="14" />
-            </svg>
-          </div>
-
-          <!-- ── Console living room ─────────────────────────────────── -->
-          <div class="half console">
-            <div class="tv-glow"></div>
-
-            <!-- Neon gamepad -->
-            <svg class="pad-neon" viewBox="0 0 132 80" width="132" height="80">
-              <path
-                class="body"
-                d="M30 14 H102 C120 14 128 30 130 52 C132 70 118 76 108 66 L96 54 H36 L24 66 C14 76 0 70 2 52 C4 30 12 14 30 14 Z"
-              />
-              <path class="dpad" d="M28 26 h8 v8 h8 v8 h-8 v8 h-8 v-8 h-8 v-8 h8 Z" />
-              <circle class="b1" cx="100" cy="27" r="5" />
-              <circle class="b2" cx="111" cy="38" r="5" />
-              <circle class="b3" cx="100" cy="49" r="5" />
-              <circle class="b4" cx="89" cy="38" r="5" />
-            </svg>
-
-            <!-- Shelf of games, with a trophy on top -->
-            <div class="shelf">
+              <!-- A sock hanging off the neon's D key -->
               <svg
-                class="trophy"
-                viewBox="0 0 24 28"
-                width="24"
-                height="28"
+                class="neon-sock"
+                viewBox="0 0 16 30"
+                width="16"
+                height="30"
                 shape-rendering="crispEdges"
               >
-                <rect x="4" y="0" width="16" height="12" />
-                <rect x="0" y="2" width="4" height="6" />
-                <rect x="20" y="2" width="4" height="6" />
-                <rect x="10" y="12" width="4" height="8" />
-                <rect x="6" y="20" width="12" height="4" />
-                <rect x="4" y="24" width="16" height="4" />
+                <rect class="sock" x="4" y="0" width="7" height="22" />
+                <rect class="sock" x="4" y="20" width="12" height="8" />
+                <rect class="stripe" x="4" y="3" width="7" height="2" />
+                <rect class="stripe" x="4" y="7" width="7" height="2" />
               </svg>
-              <div class="games">
-                <i style="background: #e84d4d"></i>
-                <i style="background: #3b7dd8"></i>
-                <i style="background: #f2c14e"></i>
-                <i style="background: #3ddc84"></i>
-                <i style="background: #9b59d0"></i>
-                <i class="lean" style="background: #ff7ab8"></i>
-              </div>
-              <div class="games">
-                <i style="background: #2fb5c9"></i>
-                <i style="background: #f28c38"></i>
-                <i style="background: #e84d4d"></i>
-                <i style="background: #ececec"></i>
-                <i style="background: #3b7dd8"></i>
-              </div>
-            </div>
 
-            <!-- TV running a generic platformer -->
-            <div class="tv">
-              <svg viewBox="0 0 172 96" width="172" height="96" shape-rendering="crispEdges">
-                <rect class="sky" width="172" height="96" />
-                <rect class="cloud" x="18" y="18" width="26" height="8" />
-                <rect class="cloud" x="24" y="14" width="14" height="4" />
-                <rect class="cloud" x="122" y="26" width="22" height="6" />
-                <path class="hill" d="M-10 80 Q30 40 70 80 Z M80 80 Q125 50 170 80 Z" />
-                <rect class="ground" y="80" width="172" height="16" />
-                <rect class="plat" x="92" y="54" width="36" height="7" />
-                <g class="coins">
-                  <rect x="100" y="44" width="5" height="7" />
-                  <rect x="113" y="44" width="5" height="7" />
-                  <rect x="38" y="62" width="5" height="7" />
+              <!-- Glass-panel tower with spinning RGB fans -->
+              <div class="tower">
+                <div class="glass">
+                  <i class="fan"></i><i class="fan"></i><i class="fan"></i>
+                  <span class="gpu"></span>
+                </div>
+              </div>
+              <!-- Leftovers piled on top of the tower -->
+              <svg
+                class="tower-top"
+                viewBox="0 0 96 30"
+                width="96"
+                height="30"
+                shape-rendering="crispEdges"
+              >
+                <rect class="box" x="2" y="20" width="74" height="10" />
+                <rect class="box" x="8" y="12" width="70" height="8" transform="rotate(-4 43 16)" />
+                <rect
+                  class="box-logo"
+                  x="30"
+                  y="14"
+                  width="16"
+                  height="3"
+                  transform="rotate(-4 43 16)"
+                />
+                <rect class="can pink" x="80" y="16" width="8" height="14" />
+                <rect class="can green" x="62" y="0" width="8" height="12" />
+              </svg>
+
+              <!-- Monitor running a generic FPS -->
+              <div class="monitor">
+                <svg viewBox="0 0 152 86" width="152" height="86">
+                  <rect class="sky" width="152" height="44" />
+                  <rect class="ground" y="44" width="152" height="42" />
+                  <polygon class="wall-l" points="0,0 52,26 52,58 0,86" />
+                  <polygon class="wall-r" points="152,0 100,26 100,58 152,86" />
+                  <rect class="door" x="66" y="32" width="20" height="24" />
+                  <g class="crosshair">
+                    <rect x="75" y="36" width="2" height="5" />
+                    <rect x="75" y="47" width="2" height="5" />
+                    <rect x="68" y="43" width="5" height="2" />
+                    <rect x="79" y="43" width="5" height="2" />
+                  </g>
+                  <rect class="hp-bg" x="6" y="76" width="40" height="5" />
+                  <rect class="hp" x="6" y="76" width="31" height="5" />
+                  <text class="ammo" x="146" y="82">30/90</text>
+                  <text class="fps" x="5" y="10">240 FPS</text>
+                  <circle class="minimap" cx="136" cy="15" r="11" />
+                  <rect class="blip" x="135" y="14" width="3" height="3" />
+                  <g class="gun">
+                    <polygon points="86,86 96,60 108,60 116,86" />
+                    <rect x="95" y="55" width="12" height="6" />
+                  </g>
+                </svg>
+              </div>
+
+              <!-- Sticky notes stuck all over the monitor bezel -->
+              <i class="note" style="left: 284px; top: 134px; --rot: -12deg"></i>
+              <i class="note" style="left: 432px; top: 150px; --rot: 9deg; background: #7fe3ff"></i>
+              <i
+                class="note"
+                style="left: 438px; top: 196px; --rot: -6deg; background: #ff9ad5"
+              ></i>
+
+              <!-- Desk: monitor stand, mechanical keyboard, mouse, headset, RGB mousepad -->
+              <svg
+                class="desk"
+                viewBox="0 0 184 94"
+                width="184"
+                height="94"
+                shape-rendering="crispEdges"
+              >
+                <rect class="stand" x="86" y="0" width="12" height="18" />
+                <rect class="stand" x="72" y="18" width="40" height="4" />
+                <rect class="pad" x="8" y="22" width="168" height="4" />
+                <rect class="kbd" x="14" y="14" width="62" height="8" />
+                <g class="keycaps">
+                  <rect x="17" y="15" width="5" height="2" />
+                  <rect x="24" y="15" width="5" height="2" />
+                  <rect x="31" y="15" width="5" height="2" />
+                  <rect x="38" y="15" width="5" height="2" />
+                  <rect x="45" y="15" width="5" height="2" />
+                  <rect x="52" y="15" width="5" height="2" />
+                  <rect x="59" y="15" width="5" height="2" />
+                  <rect x="66" y="15" width="7" height="2" />
+                  <rect x="17" y="18" width="7" height="2" />
+                  <rect x="26" y="18" width="28" height="2" />
+                  <rect x="56" y="18" width="7" height="2" />
+                  <rect x="65" y="18" width="8" height="2" />
                 </g>
-                <g class="hero">
-                  <rect x="58" y="68" width="10" height="12" />
-                  <rect x="60" y="63" width="6" height="5" />
-                </g>
-                <text class="start" x="86" y="11">PRESS START</text>
+                <rect class="mouse" x="122" y="15" width="11" height="7" />
+                <rect class="mouse-led" x="126" y="16" width="3" height="2" />
+                <path class="headset" d="M150 20 V10 a10 10 0 0 1 20 0 V20" />
+                <rect class="cup" x="146" y="13" width="7" height="9" />
+                <rect class="cup" x="167" y="13" width="7" height="9" />
+                <!-- clutter -->
+                <rect class="chips" x="0" y="10" width="12" height="16" />
+                <rect class="chips-band" x="0" y="15" width="12" height="4" />
+                <rect class="can green" x="136" y="15" width="6" height="11" />
+                <rect class="can pink" x="112" y="24" width="10" height="2" />
+                <rect class="crumbs" x="80" y="25" width="2" height="1" />
+                <rect class="crumbs" x="90" y="25" width="3" height="1" />
+                <rect class="top" x="0" y="26" width="184" height="8" />
+                <rect class="leg" x="8" y="34" width="8" height="60" />
+                <rect class="leg" x="168" y="34" width="8" height="60" />
+              </svg>
+              <div class="desk-glow"></div>
+
+              <!-- The mess on the floor -->
+              <svg
+                class="mess"
+                viewBox="0 0 380 64"
+                width="380"
+                height="64"
+                shape-rendering="crispEdges"
+              >
+                <!-- tangled cables from the tower to the desk -->
+                <path
+                  class="cable"
+                  d="M0 50 C20 58 30 38 48 52 S80 62 96 48 S120 40 132 56 S170 60 190 50 S240 44 262 54 S300 60 330 50"
+                />
+                <path
+                  class="cable two"
+                  d="M0 56 C30 46 44 62 70 54 S110 46 140 58 S200 62 230 52"
+                />
+                <!-- open pizza box, a slice missing -->
+                <polygon class="box-lid" points="34,24 92,24 98,46 40,46" />
+                <rect class="box" x="30" y="46" width="68" height="8" />
+                <path
+                  class="pizza"
+                  d="M64 50 L64 40 A12 6 0 1 0 76 50 Z"
+                  transform="translate(0 -1)"
+                />
+                <rect class="pep" x="56" y="46" width="3" height="2" />
+                <rect class="pep" x="68" y="47" width="3" height="2" />
+                <!-- hoodie heap and a sock -->
+                <path class="hoodie" d="M104 56 C104 40 118 34 132 38 C146 34 160 42 158 56 Z" />
+                <rect class="hoodie-cuff" x="150" y="50" width="12" height="6" />
+                <rect class="sock" x="166" y="52" width="12" height="4" />
+                <rect class="sock" x="174" y="48" width="4" height="6" />
+                <!-- cans: standing, lying, crushed -->
+                <rect class="can green" x="18" y="42" width="7" height="13" />
+                <rect class="can pink" x="186" y="51" width="13" height="6" />
+                <rect class="can green" x="352" y="52" width="9" height="5" />
+                <!-- paper balls -->
+                <rect class="paper" x="8" y="52" width="6" height="5" />
+                <rect class="paper" x="206" y="53" width="5" height="4" />
+                <rect class="paper" x="214" y="50" width="6" height="6" />
+                <rect class="paper" x="330" y="52" width="6" height="5" />
+                <!-- pizza boxes stacked under the desk -->
+                <rect class="box" x="232" y="48" width="62" height="7" />
+                <rect class="box" x="238" y="41" width="62" height="7" />
+                <rect class="box" x="228" y="34" width="62" height="7" />
+                <rect class="box-logo" x="252" y="36" width="14" height="3" />
+              </svg>
+
+              <!-- More junk closer to the camera, and a can pyramid by the pillar -->
+              <svg
+                class="mess-front"
+                viewBox="0 0 460 40"
+                width="460"
+                height="40"
+                shape-rendering="crispEdges"
+              >
+                <rect class="paper" x="96" y="8" width="8" height="7" />
+                <rect class="paper" x="300" y="14" width="7" height="6" />
+                <rect class="paper" x="22" y="20" width="9" height="8" />
+                <rect class="can green" x="58" y="12" width="14" height="7" />
+                <rect class="can pink" x="214" y="22" width="7" height="12" />
+                <rect class="can green" x="350" y="20" width="15" height="7" />
+                <path class="crust" d="M150 20 q14 -10 26 0 l-4 3 q-9 -6 -18 0 Z" />
+                <rect class="sock" x="250" y="8" width="14" height="5" />
+                <rect class="sock" x="260" y="4" width="4" height="7" />
+                <rect
+                  class="chips"
+                  x="388"
+                  y="10"
+                  width="20"
+                  height="12"
+                  transform="rotate(20 398 16)"
+                />
+                <rect
+                  class="chips-band"
+                  x="388"
+                  y="14"
+                  width="20"
+                  height="4"
+                  transform="rotate(20 398 16)"
+                />
+                <rect class="paper" x="430" y="18" width="7" height="6" />
+                <path class="cable" d="M0 30 C40 24 60 38 110 30 S180 22 230 32" />
+              </svg>
+              <svg
+                class="can-pyramid"
+                viewBox="0 0 34 42"
+                width="34"
+                height="42"
+                shape-rendering="crispEdges"
+              >
+                <rect class="can green" x="0" y="28" width="10" height="14" />
+                <rect class="can pink" x="12" y="28" width="10" height="14" />
+                <rect class="can green" x="24" y="28" width="10" height="14" />
+                <rect class="can pink" x="6" y="14" width="10" height="14" />
+                <rect class="can green" x="18" y="14" width="10" height="14" />
+                <rect class="can pink" x="12" y="0" width="10" height="14" />
               </svg>
             </div>
 
-            <!-- Cabinet: console with a light strip, two controllers, a stack of discs -->
-            <div class="cabinet">
-              <div class="cubby">
-                <span class="console-box"></span>
-                <span class="ctrl"></span>
-                <span class="ctrl two"></span>
+            <!-- ── Console living room ─────────────────────────────────── -->
+            <div class="half console">
+              <div class="tv-glow"></div>
+
+              <!-- Neon gamepad -->
+              <svg class="pad-neon" viewBox="0 0 132 80" width="132" height="80">
+                <path
+                  class="body"
+                  d="M30 14 H102 C120 14 128 30 130 52 C132 70 118 76 108 66 L96 54 H36 L24 66 C14 76 0 70 2 52 C4 30 12 14 30 14 Z"
+                />
+                <path class="dpad" d="M28 26 h8 v8 h8 v8 h-8 v8 h-8 v-8 h-8 v-8 h8 Z" />
+                <circle class="b1" cx="100" cy="27" r="5" />
+                <circle class="b2" cx="111" cy="38" r="5" />
+                <circle class="b3" cx="100" cy="49" r="5" />
+                <circle class="b4" cx="89" cy="38" r="5" />
+              </svg>
+
+              <!-- Shelf of games, with a trophy on top -->
+              <div class="shelf">
+                <svg
+                  class="trophy"
+                  viewBox="0 0 24 28"
+                  width="24"
+                  height="28"
+                  shape-rendering="crispEdges"
+                >
+                  <rect x="4" y="0" width="16" height="12" />
+                  <rect x="0" y="2" width="4" height="6" />
+                  <rect x="20" y="2" width="4" height="6" />
+                  <rect x="10" y="12" width="4" height="8" />
+                  <rect x="6" y="20" width="12" height="4" />
+                  <rect x="4" y="24" width="16" height="4" />
+                </svg>
+                <div class="games">
+                  <i style="background: #e84d4d"></i>
+                  <i style="background: #3b7dd8"></i>
+                  <i style="background: #f2c14e"></i>
+                  <i style="background: #3ddc84"></i>
+                  <i style="background: #9b59d0"></i>
+                  <i class="lean" style="background: #ff7ab8"></i>
+                </div>
+                <div class="games">
+                  <i style="background: #2fb5c9"></i>
+                  <i style="background: #f28c38"></i>
+                  <i style="background: #e84d4d"></i>
+                  <i style="background: #ececec"></i>
+                  <i style="background: #3b7dd8"></i>
+                </div>
               </div>
-              <div class="cubby"><span class="discs"></span></div>
+
+              <!-- TV running a generic platformer -->
+              <div class="tv">
+                <svg viewBox="0 0 172 96" width="172" height="96" shape-rendering="crispEdges">
+                  <rect class="sky" width="172" height="96" />
+                  <rect class="cloud" x="18" y="18" width="26" height="8" />
+                  <rect class="cloud" x="24" y="14" width="14" height="4" />
+                  <rect class="cloud" x="122" y="26" width="22" height="6" />
+                  <path class="hill" d="M-10 80 Q30 40 70 80 Z M80 80 Q125 50 170 80 Z" />
+                  <rect class="ground" y="80" width="172" height="16" />
+                  <rect class="plat" x="92" y="54" width="36" height="7" />
+                  <g class="coins">
+                    <rect x="100" y="44" width="5" height="7" />
+                    <rect x="113" y="44" width="5" height="7" />
+                    <rect x="38" y="62" width="5" height="7" />
+                  </g>
+                  <g class="hero">
+                    <rect x="58" y="68" width="10" height="12" />
+                    <rect x="60" y="63" width="6" height="5" />
+                  </g>
+                  <text class="start" x="86" y="11">PRESS START</text>
+                </svg>
+              </div>
+
+              <!-- Cabinet: console with a light strip, two controllers, a stack of discs -->
+              <div class="cabinet">
+                <div class="cubby">
+                  <span class="console-box"></span>
+                  <span class="ctrl"></span>
+                  <span class="ctrl two"></span>
+                </div>
+                <div class="cubby"><span class="discs"></span></div>
+              </div>
+
+              <!-- Sofa against the back wall, with cushions, a throw blanket and a spare pad -->
+              <svg
+                class="sofa"
+                viewBox="0 0 196 92"
+                width="196"
+                height="92"
+                shape-rendering="crispEdges"
+              >
+                <rect class="back" x="14" y="0" width="168" height="44" rx="10" />
+                <rect class="seam" x="97" y="6" width="2" height="36" />
+                <rect class="seat" x="18" y="40" width="80" height="20" rx="4" />
+                <rect class="seat" x="98" y="40" width="80" height="20" rx="4" />
+                <rect class="arm" x="0" y="26" width="22" height="50" rx="9" />
+                <rect class="arm" x="174" y="26" width="22" height="50" rx="9" />
+                <rect class="base" x="8" y="60" width="180" height="20" />
+                <rect class="foot" x="14" y="80" width="8" height="12" />
+                <rect class="foot" x="174" y="80" width="8" height="12" />
+                <rect
+                  class="pillow"
+                  x="24"
+                  y="18"
+                  width="28"
+                  height="26"
+                  rx="6"
+                  transform="rotate(-10 38 31)"
+                />
+                <rect
+                  class="pillow two"
+                  x="146"
+                  y="20"
+                  width="26"
+                  height="24"
+                  rx="6"
+                  transform="rotate(8 159 32)"
+                />
+                <g class="blanket">
+                  <rect x="112" y="4" width="36" height="58" />
+                  <rect class="stripe" x="112" y="14" width="36" height="4" />
+                  <rect class="stripe" x="112" y="30" width="36" height="4" />
+                  <rect class="stripe" x="112" y="46" width="36" height="4" />
+                </g>
+                <rect class="pad" x="62" y="36" width="20" height="8" rx="4" />
+              </svg>
+
+              <div class="rug"></div>
+              <div class="beanbag"></div>
             </div>
 
-            <!-- Sofa against the back wall, with cushions, a throw blanket and a spare pad -->
-            <svg
-              class="sofa"
-              viewBox="0 0 196 92"
-              width="196"
-              height="92"
-              shape-rendering="crispEdges"
-            >
-              <rect class="back" x="14" y="0" width="168" height="44" rx="10" />
-              <rect class="seam" x="97" y="6" width="2" height="36" />
-              <rect class="seat" x="18" y="40" width="80" height="20" rx="4" />
-              <rect class="seat" x="98" y="40" width="80" height="20" rx="4" />
-              <rect class="arm" x="0" y="26" width="22" height="50" rx="9" />
-              <rect class="arm" x="174" y="26" width="22" height="50" rx="9" />
-              <rect class="base" x="8" y="60" width="180" height="20" />
-              <rect class="foot" x="14" y="80" width="8" height="12" />
-              <rect class="foot" x="174" y="80" width="8" height="12" />
-              <rect
-                class="pillow"
-                x="24"
-                y="18"
-                width="28"
-                height="26"
-                rx="6"
-                transform="rotate(-10 38 31)"
-              />
-              <rect
-                class="pillow two"
-                x="146"
-                y="20"
-                width="26"
-                height="24"
-                rx="6"
-                transform="rotate(8 159 32)"
-              />
-              <g class="blanket">
-                <rect x="112" y="4" width="36" height="58" />
-                <rect class="stripe" x="112" y="14" width="36" height="4" />
-                <rect class="stripe" x="112" y="30" width="36" height="4" />
-                <rect class="stripe" x="112" y="46" width="36" height="4" />
-              </g>
-              <rect class="pad" x="62" y="36" width="20" height="8" rx="4" />
-            </svg>
-
-            <div class="rug"></div>
-            <div class="beanbag"></div>
+            <!-- ── Centre pillar with 1P / 2P lamps ────────────────────── -->
+            <div class="pillar">
+              <span class="p1">1P</span>
+              <span class="p2">2P</span>
+            </div>
           </div>
 
-          <!-- ── Centre pillar with 1P / 2P lamps ────────────────────── -->
-          <div class="pillar">
-            <span class="p1">1P</span>
-            <span class="p2">2P</span>
-          </div>
+          <!-- Ambient light: god rays and drifting sparkles over the background (effects.css) -->
+          <div id="ambient" aria-hidden="true"></div>
+          <!-- Dims the background behind the fighters during attacks (flashy.js) -->
+          <div id="dim"></div>
+
+          <div class="fighter" id="fighter-dev"></div>
+          <div class="fighter" id="fighter-qa"></div>
+
+          <!-- DevOps boss scene (key 0): disabled
+        <div id="boss">
+          <div class="server" style="left: 30px">🔥🔥</div>
+          <div class="server short" style="left: 140px">🔥</div>
+          <div class="server" style="right: 30px">🔥🔥</div>
+          <div class="server short" style="right: 140px">🔥</div>
+          <div id="boss-sprite"><div class="boss-phone"></div></div>
+          <div id="boss-bubble"></div>
         </div>
+        -->
+
+          <div id="fx"></div>
+        </div>
+        <!-- Screen-space effects: super-flash cut-ins, speed lines, full-screen flashes, banners -->
+        <div id="fx-top"></div>
+        <div id="vignette"></div>
 
         <!-- HUD: portraits, health bars, VS timer -->
         <div id="hud">
@@ -441,22 +474,6 @@
             </div>
           </div>
         </div>
-
-        <div class="fighter" id="fighter-dev"></div>
-        <div class="fighter" id="fighter-qa"></div>
-
-        <!-- DevOps boss scene (key 0): disabled
-        <div id="boss">
-          <div class="server" style="left: 30px">🔥🔥</div>
-          <div class="server short" style="left: 140px">🔥</div>
-          <div class="server" style="right: 30px">🔥🔥</div>
-          <div class="server short" style="right: 140px">🔥</div>
-          <div id="boss-sprite"><div class="boss-phone"></div></div>
-          <div id="boss-bubble"></div>
-        </div>
-        -->
-
-        <div id="fx"></div>
         <div id="controls"></div>
         <div id="flash"></div>
 

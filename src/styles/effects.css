@@ -82,11 +82,11 @@
 }
 
 .floppy.p0 {
-  filter: drop-shadow(0 0 6px var(--cyan));
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 16px var(--cyan)) brightness(1.15);
 }
 
 .floppy.p1 {
-  filter: drop-shadow(0 0 6px var(--magenta));
+  filter: drop-shadow(0 0 6px var(--magenta)) drop-shadow(0 0 16px var(--magenta)) brightness(1.15);
 }
 
 /* Emilia's bug swarm (positioned by fight.js) */
@@ -94,14 +94,14 @@
   object-fit: contain;
   image-rendering: pixelated;
   z-index: 6;
-  filter: drop-shadow(0 0 6px var(--magenta));
+  filter: drop-shadow(0 0 6px var(--magenta)) drop-shadow(0 0 14px var(--magenta));
 }
 
 .doc {
   object-fit: contain;
   image-rendering: pixelated;
   z-index: 6;
-  filter: drop-shadow(0 0 6px var(--cyan));
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 14px var(--cyan));
 }
 
 /* Kuba's specials, keys 3 / 4 / 5 (built and timed by fight.js) */
@@ -427,6 +427,9 @@
 
 /* Speech bubbles: attack names, and quips when a swarm is countered */
 .speech {
+  box-shadow:
+    4px 4px 0 #000,
+    0 0 16px #fff8;
   max-width: 240px;
   background: #fff;
   color: #000;
@@ -513,11 +516,23 @@
 .pop {
   font-size: 14px;
   text-shadow:
-    2px 2px #000,
-    -1px -1px #000;
+    -2px 0 #ff2a6d,
+    2px 0 #05d9e8,
+    3px 3px #000,
+    -1px -1px #000,
+    0 0 10px currentColor;
   white-space: nowrap;
-  animation: float-up 1.4s forwards;
+  animation:
+    pop-in 0.18s ease-out,
+    float-up 1.4s forwards;
   z-index: 7;
+}
+
+@keyframes pop-in {
+  from {
+    scale: 2.4;
+    filter: brightness(3);
+  }
 }
 
 @keyframes float-up {
@@ -527,44 +542,151 @@
   }
 }
 
-/* Full-width banners ("CRITICAL HIT!", "ROUND 1 – FIGHT!") */
+/* Full-width banners ("ROUND 1", "FIGHT!", "K.O."): skewed, chromatic, light sweep (in #fx-top) */
 .banner {
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 30px;
-  line-height: 1.4;
+  font-size: 40px;
+  line-height: 1.35;
+  color: #fff;
+  z-index: 5;
+  padding: 18px 10px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(-60deg, #fff1 0 4px, #0000 4px 14px),
+    linear-gradient(90deg, #0000, #000d 12%, #000d 88%, #0000);
+  animation: banner-band 0.3s ease-out both;
+}
+
+.banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-top: 3px solid #ff3fa4;
+  border-bottom: 3px solid #00e5ff;
+  box-shadow:
+    0 -6px 24px -6px #ff3fa4,
+    0 6px 24px -6px #00e5ff;
+  mask-image: linear-gradient(90deg, #0000, #000 20%, #000 80%, #0000);
+}
+
+/* Light sweep across the banner */
+.banner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -200px;
+  width: 140px;
+  background: linear-gradient(90deg, #0000, #fffa, #0000);
+  transform: skewX(-25deg);
+  mix-blend-mode: overlay;
+  animation: banner-sweep 0.8s 0.2s ease-out forwards;
+}
+
+.banner > span {
+  display: inline-block;
+  transform: skewX(-10deg);
   text-shadow:
-    4px 4px #b30000,
-    0 0 20px var(--magenta);
+    -4px 0 #ff2a6d,
+    4px 0 #05d9e8,
+    6px 6px 0 #000,
+    0 0 30px var(--magenta);
   animation: slam 0.35s both;
-  z-index: 9;
-  padding: 10px;
-  background: linear-gradient(90deg, #0000, #000b 15%, #000b 85%, #0000);
 }
 
 .banner.small {
-  font-size: 18px;
+  font-size: 22px;
+}
+
+.banner.fight > span {
+  font-size: 72px;
+  color: #ffea00;
+  text-shadow:
+    -5px 0 #ff2a6d,
+    5px 0 #05d9e8,
+    7px 7px 0 #b30000,
+    0 0 40px #ff6a00;
+  animation:
+    slam 0.3s both,
+    banner-throb 0.12s 0.3s steps(2) 4;
+}
+
+.banner.ko {
+  top: 150px !important;
+}
+
+.banner.ko > span {
+  font-size: 110px;
+  color: #ff2020;
+  text-shadow:
+    -6px 0 #ff2a6d,
+    6px 0 #05d9e8,
+    8px 8px 0 #000,
+    0 0 50px #f00,
+    0 0 90px #ff6a00;
+  animation:
+    slam 0.25s both,
+    banner-shake 0.08s 0.25s 8;
 }
 
 .banner.souls {
+  background: linear-gradient(90deg, #0000, #000b 15%, #000b 85%, #0000);
   font:
     62px Georgia,
     serif;
   letter-spacing: 8px;
   color: #a00000;
-  text-shadow: 0 0 30px #f00;
   animation-duration: 0.6s;
+}
+
+.banner.souls > span {
+  transform: none;
+  text-shadow: 0 0 30px #f00;
+}
+
+.banner.souls::before,
+.banner.souls::after {
+  display: none;
 }
 
 @keyframes slam {
   from {
-    transform: scale(4);
+    transform: scale(4) skewX(-10deg);
     opacity: 0;
+    filter: brightness(4);
   }
   to {
-    transform: none;
+    transform: skewX(-10deg);
     opacity: 1;
+  }
+}
+
+@keyframes banner-band {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes banner-sweep {
+  to {
+    left: 1100px;
+  }
+}
+
+@keyframes banner-throb {
+  to {
+    filter: brightness(1.8);
+  }
+}
+
+@keyframes banner-shake {
+  33% {
+    translate: -6px 3px;
+  }
+  66% {
+    translate: 5px -4px;
   }
 }
 
