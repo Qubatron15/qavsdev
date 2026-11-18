@@ -96,5 +96,5 @@ export const sfx = {
 export function toggleMute() {
   state.muted = !state.muted;
   if (master) master.gain.value = state.muted ? 0 : VOLUME;
-  $('#sound-toggle').textContent = state.muted ? '🔇 MUTED [M]' : '🔊 SOUND [M]';
+  $('#sound-toggle').textContent = state.muted ? '🔇 MUTED [=]' : '🔊 SOUND [=]';
 }

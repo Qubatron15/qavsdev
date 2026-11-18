@@ -1,11 +1,13 @@
 import { $ } from './dom.js';
 import { state } from './state.js';
 import { ensureAudio, toggleMute } from './audio.js';
-import { toggleCaseStudy } from './caseStudy.js';
+// Case study slide: disabled
+// import { toggleCaseStudy } from './caseStudy.js';
 import { resetArena } from './reset.js';
-import { BeatCancelled } from './timing.js';
-import { beats } from './beats/index.js';
-import { handleFightKey, releaseAllKeys, startMatch } from './fight.js';
+// Story beats: disabled
+// import { BeatCancelled } from './timing.js';
+// import { beats } from './beats/index.js';
+import { handleFightKey, releaseAllKeys, renderControls, startMatch } from './fight.js';
 
 function onKeyDown(event) {
   if (event.key === 'Escape') {
@@ -16,30 +18,36 @@ function onKeyDown(event) {
 
   ensureAudio(); // first key press unlocks audio
   if (!state.caseStudyOpen && handleFightKey(event, true)) {
-    event.preventDefault(); // arrows / Enter must not scroll or click
+    event.preventDefault(); // e.g. `/` must not open Firefox's quick find
     return;
   }
   if (event.repeat) return;
 
-  const key = event.key.toLowerCase();
-  if (key === 'c') return toggleCaseStudy();
-  if (key === 'r') return resetArena();
-  if (key === 'm') return toggleMute();
+  // Both hands' zones are taken by the fight keymap, so reset / mute sit outside them.
+  // const key = event.key.toLowerCase();
+  // if (key === 'c') return toggleCaseStudy(); // Case study slide: disabled
+  if (event.code === 'Backspace') {
+    event.preventDefault();
+    return resetArena();
+  }
+  if (event.code === 'Equal') return toggleMute();
   if (state.caseStudyOpen) return;
   if (event.code === 'Space') {
     event.preventDefault();
     return startMatch();
   }
 
-  const beat = beats[key];
-  if (beat) {
-    beat().catch((error) => {
-      if (!(error instanceof BeatCancelled)) console.error(error);
-    });
-  }
+  // Story beats (keys 1-8): disabled
+  // const beat = beats[key];
+  // if (beat) {
+  //   beat().catch((error) => {
+  //     if (!(error instanceof BeatCancelled)) console.error(error);
+  //   });
+  // }
 }
 
 export function initInput() {
+  renderControls();
   addEventListener('keydown', onKeyDown);
   addEventListener('keyup', (event) => handleFightKey(event, false));
   addEventListener('blur', releaseAllKeys);

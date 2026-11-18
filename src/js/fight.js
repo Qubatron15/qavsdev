@@ -1,4 +1,9 @@
 import floppySrc from '../assets/props/floppy.png';
+import bugSrc from '../assets/sprites/bug.png';
+import noDocsSrc from '../assets/props/no-docs.svg';
+import hairdryerSrc from '../assets/props/hairdryer.svg';
+import wheelSrc from '../assets/props/wheel.svg';
+import bananaSrc from '../assets/props/banana.svg';
 import { $, fighter } from './dom.js';
 import { state } from './state.js';
 import { sfx } from './audio.js';
@@ -36,6 +41,47 @@ const FLOPPY_HEIGHT = 120; // launch height above the thrower's feet
 const THROW_POSE_TIME = 0.3; // s
 const THROW_COOLDOWN = 0.55; // s between throws (and only one floppy in flight)
 
+const BUG_COUNT = 5;
+const BUG_INTERVAL = 0.1; // s between bugs in the swarm
+const BUG_WINDUP = 0.3; // s of throw pose before the first bug leaves
+const BUG_SPEED = 560; // px/s
+const BUG_WIDTH = 86;
+const BUG_HEIGHT = 64;
+const BUG_COOLDOWN = 1.8; // s, and only one swarm at a time
+const BUG_LANES = [70, 130, 190, 100, 160]; // height above the ground
+const BUG_QUIPS = ['works on my machine', 'cannot reproduce'];
+
+// Kuba's answer to the swarm: a series of crossed-out documents. Same timing and damage as bugs.
+const DOC_SIZE = 56;
+const DOC_QUIP = 'no documentation means no bugs';
+const DOC_BLOCK_QUIPS = ['no docs, no sign-off', 'I wrote them myself'];
+
+// Specials — Kuba: 3 / 4 / 5, Emilia: 8 / 9. Wind-up + speech bubble, then a scene effect on the
+// opponent's side and its hit(s); only the matching counter (see LAYOUT) stops them. They share the owner's swarm cooldown, and each
+// fighter runs one special at a time (both fighters may have one going at once).
+const SPECIAL_WINDUP = 0.35; // s of throw pose before the effect starts
+const SPECIAL_FADE = 0.35; // s the effect takes to fade out
+const FLOOR_TOP = 470; // stage y where the front strip of floor starts (just below the feet line)
+const FLOOR_CELL = 60; // px, width of one floor tile that can fall away
+const FLOOR_HOLES = 5; // tiles of Kuba's floor that vanish on "missing ACs"
+const AC_QUESTIONS = ['GIVEN ???', 'WHEN ???', 'THEN ???']; // orbit Kuba during "missing ACs"
+const AC_ORBIT = { rx: 125, ry: 38, height: 130, speed: 3.2 }; // px, px, px above feet, rad/s
+const AC_HIT_TIMES = [0.45, 1.05, 1.65]; // s: each question hits Kuba once, in turn
+const PRIORITY_LABELS = ['P1', 'P2', 'P3', 'MAJOR', 'URGENT!', 'P2', 'CRITICAL'];
+const PRIORITY_DAMAGE = 2; // "bug priority wars" hits twice as hard
+const TASK_PILE_HEIGHT = 160; // px: buries Emilia up to the neck
+const TASK_ROW_HEIGHT = 22;
+const TASK_LABELS = ['TEST #', 'AI PR #', 'VERIFY #', 'REGRESS #'];
+const RANDOM_STUFF = [
+  hairdryerSrc,
+  wheelSrc,
+  bananaSrc,
+  bananaSrc,
+  hairdryerSrc,
+  wheelSrc,
+  bananaSrc,
+];
+
 const BASE_DAMAGE = [8, 12]; // random inclusive range
 const CRIT_CHANCE = 0.12;
 const CRIT_MULTIPLIER = 1.5;
@@ -51,26 +97,109 @@ const BLOCK_KNOCKBACK = 14; // px
 const NAMES = ['JAKUB', 'EMILIA'];
 const COLORS = ['#0ff', '#f6a'];
 
-/** Physical key (event.code) → [player, action]. Kuba: left side, Emilia: right side. */
-const KEYMAP = {
-  KeyA: [0, 'left'],
-  KeyD: [0, 'right'],
-  KeyW: [0, 'jump'],
-  KeyS: [0, 'block'],
-  KeyF: [0, 'throw'],
-  KeyG: [0, 'throw'],
-  ArrowLeft: [1, 'left'],
-  ArrowRight: [1, 'right'],
-  ArrowUp: [1, 'jump'],
-  ArrowDown: [1, 'block'],
-  Enter: [1, 'throw'],
-  NumpadEnter: [1, 'throw'],
-  Numpad0: [1, 'throw'],
-  KeyL: [1, 'throw'],
+/*
+ * Keymap: one keyboard, no numpad. Each player has a movement cluster plus two rows that line up
+ * column by column — the number row holds your attacks, the bottom row your blocks. Slot N of
+ * your block row counters slot N of your opponent's attack row:
+ *
+ *   slot      1        2          3              4             5
+ *   KUBA  1 floppy  2 no docs  3 fri hotfix   4 AI code-gen  5 undocumented
+ *         Z block   X vs bugs  C vs ACs       V vs priority
+ *   EMI   6 floppy  7 bugs     8 missing ACs  9 priority
+ *         N block   M vs docs  , vs hotfix    . vs code-gen  / vs undocumented
+ *
+ * Slot 1 is the classic block (hold; 20% chip damage, floppies only). Slots 2+ are counters:
+ * press one while that exact attack is incoming and hold it to cancel the hit completely.
+ * Pressing a counter when that attack isn't coming whiffs and locks your counters briefly.
+ */
+const LAYOUT = [
+  {
+    move: { left: 'KeyA', right: 'KeyD', jump: 'KeyW' },
+    attacks: [
+      ['Digit1', 'throw'],
+      ['Digit2', 'docs'],
+      ['Digit3', 'hotfix'],
+      ['Digit4', 'codegen'],
+      ['Digit5', 'undocumented'],
+    ],
+    blocks: [
+      ['KeyZ', 'block'],
+      ['KeyX', 'guard:bugs'],
+      ['KeyC', 'guard:acs'],
+      ['KeyV', 'guard:priority'],
+    ],
+  },
+  {
+    move: { left: 'KeyJ', right: 'KeyL', jump: 'KeyI' },
+    attacks: [
+      ['Digit6', 'throw'],
+      ['Digit7', 'bugs'],
+      ['Digit8', 'acs'],
+      ['Digit9', 'priority'],
+    ],
+    blocks: [
+      ['KeyN', 'block'],
+      ['KeyM', 'guard:docs'],
+      ['Comma', 'guard:hotfix'],
+      ['Period', 'guard:codegen'],
+      ['Slash', 'guard:undocumented'],
+    ],
+  },
+];
+
+/** Physical key (event.code) → [player, action], built from LAYOUT. */
+const KEYMAP = {};
+LAYOUT.forEach(({ move, attacks, blocks }, player) => {
+  for (const [action, code] of Object.entries(move)) KEYMAP[code] = [player, action];
+  for (const [code, action] of [...attacks, ...blocks]) KEYMAP[code] = [player, action];
+});
+
+const GUARD_PREFIX = 'guard:';
+const GUARD_WHIFF_LOCK = 0.6; // s: a counter pressed against nothing locks counters this long
+
+const ATTACK_LABELS = {
+  throw: 'floppy',
+  docs: 'no docs',
+  bugs: 'bug swarm',
+  hotfix: 'fri hotfix',
+  codegen: 'AI code-gen',
+  undocumented: 'undocumented',
+  acs: 'missing ACs',
+  priority: 'priority',
 };
 
-export const CONTROLS_HELP =
-  'KUBA: A/D/W · S block · F throw ║ EMI: ARROWS · DOWN block · ENTER throw';
+const KEY_LABELS = { Comma: ',', Period: '.', Slash: '/' };
+const keyLabel = (code) => KEY_LABELS[code] ?? code.replace(/^(Key|Digit)/, '');
+
+/** Short legend for the caption bar, derived from LAYOUT (e.g. "1-5 attack"). */
+export const CONTROLS_HELP = LAYOUT.map(({ move, attacks, blocks }, player) => {
+  const span = (keys) => keyLabel(keys[0][0]) + '-' + keyLabel(keys.at(-1)[0]);
+  const moves = [move.left, move.jump, move.right].map(keyLabel).join('');
+  return `${['KUBA', 'EMI'][player]}: ${moves} move · ${span(attacks)} attack · ${span(blocks)} block`;
+}).join(' ║ ');
+
+/** Fill the keymap panel shown before a match (index.html #controls), from LAYOUT. */
+export function renderControls() {
+  const keycap = (code, label) =>
+    `<span class="key-slot"><kbd>${keyLabel(code)}</kbd><small>${label}</small></span>`;
+  $('#controls').innerHTML =
+    LAYOUT.map(({ move, attacks, blocks }, player) => {
+      const blockLabel = (action) =>
+        action === 'block' ? 'floppy (hold)' : ATTACK_LABELS[action.slice(GUARD_PREFIX.length)];
+      return `
+      <div class="controls-player p${player}">
+        <h3>${NAMES[player]}</h3>
+        <div class="controls-row"><b>MOVE</b>${keycap(move.left, 'left')}${keycap(move.jump, 'jump')}${keycap(move.right, 'right')}</div>
+        <div class="controls-row"><b>ATTACK</b>${attacks.map(([code, action]) => keycap(code, ATTACK_LABELS[action])).join('')}</div>
+        <div class="controls-row"><b>BLOCK</b>${blocks.map(([code, action]) => keycap(code, blockLabel(action))).join('')}</div>
+      </div>`;
+    }).join('') +
+    '<p class="controls-note">Same column = same slot: your block in slot N counters your opponent\'s attack in slot N. ' +
+    'Slot 1 is held (chip damage); counters must be pressed while that attack is incoming — a wrong guess locks them for a moment.</p>';
+}
+
+const showControls = () =>
+  $('#controls').classList.toggle('on', !isFightActive() || match.phase === 'matchOver');
 
 // ── State ───────────────────────────────────────────────────────────────────
 const held = [new Set(), new Set()]; // actions currently held per player
@@ -90,9 +219,12 @@ const newFighter = (player) => ({
   dir: player ? -1 : 1, // facing: Kuba looks right, Emilia left
   throwTimer: 0, // remaining throw-pose time
   cooldown: 0,
+  swarmCooldown: 0, // bugs (Emilia) or no-docs (Kuba)
   stun: 0,
   stunPose: 'hit', // what to show while stunned: 'hit' or 'block'
   blocking: false,
+  guard: null, // counter currently armed and held (an opponent attack kind), see LAYOUT
+  guardLock: 0, // s left of the whiff lockout
   combo: 0,
   lastHitAt: -Infinity, // match clock of this fighter's last landed hit
   hitsLanded: 0,
@@ -107,6 +239,11 @@ function newMatch() {
     timeLeft: ROUND_TIME,
     fighters: [newFighter(0), newFighter(1)],
     floppies: [],
+    bugs: [],
+    bugVolley: null, // { spawnsLeft, timer, resolved } while Emilia's swarm is live
+    docs: [],
+    docVolley: null, // { spawnsLeft, timer, resolved } while Kuba's no-docs series is live
+    specials: [], // { kind, t, hit, el } per running special (at most one per fighter)
     announced: new Set(), // one-shot announcements per phase
   };
 }
@@ -115,7 +252,10 @@ function newMatch() {
 
 /** Back to the "press SPACE" screen with fresh fighters. */
 export function resetFight() {
-  match?.floppies.forEach((f) => f.el.remove());
+  clearProjectiles();
+  $('#fx')
+    .querySelectorAll('.speech')
+    .forEach((el) => el.remove());
   match = newMatch();
   held.forEach((set) => set.clear());
   pressed.forEach((set) => set.clear());
@@ -125,6 +265,7 @@ export function resetFight() {
   }
   render();
   updateHud();
+  showControls();
   if (!running) {
     running = true;
     lastTime = performance.now();
@@ -162,9 +303,22 @@ export function releaseAllKeys() {
 
 // ── Round flow ──────────────────────────────────────────────────────────────
 
-function startRound(round) {
-  match.floppies.forEach((f) => f.el.remove());
+function clearProjectiles() {
+  if (!match) return;
+  for (const floppy of match.floppies) floppy.el.remove();
+  for (const bug of match.bugs) bug.el.remove();
+  for (const doc of match.docs) doc.el.remove();
   match.floppies = [];
+  match.bugs = [];
+  match.bugVolley = null;
+  match.docs = [];
+  match.docVolley = null;
+  for (const special of match.specials) special.el?.remove();
+  match.specials = [];
+}
+
+function startRound(round) {
+  clearProjectiles();
   match.round = round;
   match.timeLeft = ROUND_TIME;
   match.fighters.forEach((f) => {
@@ -172,6 +326,7 @@ function startRound(round) {
     fighter(f.player).classList.remove('ko', 'hit', 'blocking', 'winner');
   });
   setPhase('intro');
+  showControls();
   updateHud();
   setCaption('ROUND ' + round, CONTROLS_HELP);
 }
@@ -197,8 +352,7 @@ function endRound(reason) {
   match.roundWinner = winner;
   match.roundEndReason = reason;
   setPhase('roundOver');
-  match.floppies.forEach((f) => f.el.remove());
-  match.floppies = [];
+  clearProjectiles();
 
   if (reason === 'ko') {
     const loser = winner ? match.fighters[1 - winner.player] : null;
@@ -250,11 +404,12 @@ function updatePhase(dt) {
       const champion = match.fighters.find((f) => f.wins >= ROUNDS_TO_WIN);
       if (champion) {
         setPhase('matchOver');
+        showControls();
         banner(`${NAMES[champion.player]}<br>WINS THE MATCH!`, '', 4000);
         sfx.candy();
         setCaption(
           'GAME OVER',
-          `${NAMES[champion.player]} wins ${champion.wins}–${match.fighters[1 - champion.player].wins}! Press [SPACE] for a rematch · [R] reset`,
+          `${NAMES[champion.player]} wins ${champion.wins}–${match.fighters[1 - champion.player].wins}! Press [SPACE] for a rematch · [BACKSPACE] reset`,
         );
       } else {
         startRound(match.round + 1);
@@ -270,17 +425,21 @@ const canAct = (f) => match.phase === 'fight' && f.stun <= 0 && f.health > 0;
 function updateFighter(f, dt) {
   f.throwTimer = Math.max(0, f.throwTimer - dt);
   f.cooldown = Math.max(0, f.cooldown - dt);
+  f.swarmCooldown = Math.max(0, f.swarmCooldown - dt);
   f.stun = Math.max(0, f.stun - dt);
+  f.guardLock = Math.max(0, f.guardLock - dt);
 
   const keys = held[f.player];
   const taps = pressed[f.player];
   const grounded = f.y === 0;
   const active = canAct(f);
 
+  updateGuard(f, keys, taps);
+
   // Block: hold, only on the ground, not mid-throw. Blocking roots you in place.
   f.blocking = active && grounded && keys.has('block') && f.throwTimer === 0;
 
-  if (active && !f.blocking) {
+  if (active && !f.blocking && !f.guard) {
     const move = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
     // Walking backwards is a bit slower, as tradition demands.
     const speed = move === f.dir ? WALK_SPEED : WALK_SPEED * 0.8;
@@ -291,6 +450,9 @@ function updateFighter(f, dt) {
       sfx.zap();
     }
     if (taps.has('throw')) tryThrow(f);
+    if (taps.has('bugs')) tryBugs(f);
+    if (taps.has('docs')) tryDocs(f);
+    for (const kind in SPECIALS) if (taps.has(kind)) trySpecial(f, kind);
   }
 
   // Gravity
@@ -299,6 +461,43 @@ function updateFighter(f, dt) {
     f.y = Math.max(0, f.y + f.vy * dt);
     if (f.y === 0) f.vy = 0;
   }
+}
+
+/** Is the opponent's attack `kind` currently on its way to fighter `f`? */
+function incoming(f, kind) {
+  if (match.phase !== 'fight') return false;
+  if (kind === 'bugs') return f.player === 0 && !!match.bugVolley && !match.bugVolley.resolved;
+  if (kind === 'docs') return f.player === 1 && !!match.docVolley && !match.docVolley.resolved;
+  const spec = SPECIALS[kind];
+  return (
+    spec?.owner === 1 - f.player &&
+    match.specials.some((s) => s.kind === kind && s.hits < [spec.hitAt].flat().length)
+  );
+}
+
+/**
+ * Counters (block row, slots 2+). A fresh press arms the counter only if that exact attack is
+ * incoming; any wrong press whiffs and locks counters for GUARD_WHIFF_LOCK. An armed counter
+ * lasts while its key is held and the attack is live, works even in hit stun, and roots you.
+ */
+function updateGuard(f, keys, taps) {
+  if (f.health === 0 || match.phase !== 'fight') {
+    f.guard = null;
+    return;
+  }
+  const tapped = [...taps]
+    .filter((a) => a.startsWith(GUARD_PREFIX))
+    .map((a) => a.slice(GUARD_PREFIX.length));
+  if (tapped.length && f.guardLock === 0) {
+    if (tapped.every((kind) => incoming(f, kind))) {
+      f.guard = tapped[0];
+    } else {
+      f.guard = null;
+      f.guardLock = GUARD_WHIFF_LOCK;
+      popText('MISS', f.x - 20, toStageY(f.y + FIGHTER_HEIGHT) - 10, '#999', 12);
+    }
+  }
+  if (f.guard && (!keys.has(GUARD_PREFIX + f.guard) || !incoming(f, f.guard))) f.guard = null;
 }
 
 function tryThrow(f) {
@@ -321,6 +520,434 @@ function tryThrow(f) {
     spin: 0,
     el,
   });
+}
+
+/** Emilia winds up, then releases a series of bugs toward Kuba. */
+function tryBugs(f) {
+  if (f.player !== 1 || f.swarmCooldown > 0 || match.bugVolley) return;
+  f.throwTimer = BUG_WINDUP + BUG_INTERVAL * (BUG_COUNT - 1) + THROW_POSE_TIME;
+  f.swarmCooldown = BUG_COOLDOWN;
+  sfx.whoosh();
+  match.bugVolley = { spawnsLeft: BUG_COUNT, timer: BUG_WINDUP, resolved: false };
+}
+
+/** Kuba winds up, says his line, then releases a series of crossed-out documents at Emilia. */
+function tryDocs(f) {
+  if (f.player !== 0 || f.swarmCooldown > 0 || match.docVolley) return;
+  f.throwTimer = BUG_WINDUP + BUG_INTERVAL * (BUG_COUNT - 1) + THROW_POSE_TIME;
+  f.swarmCooldown = BUG_COOLDOWN;
+  sfx.whoosh();
+  showSpeech(f, DOC_QUIP);
+  match.docVolley = { spawnsLeft: BUG_COUNT, timer: BUG_WINDUP, resolved: false };
+}
+
+const ownerOf = (special) => SPECIALS[special.kind].owner;
+
+/** A fighter starts one of their specials: announce it, then let updateSpecials play it out. */
+function trySpecial(f, kind) {
+  const busy = match.specials.some((s) => ownerOf(s) === f.player);
+  if (SPECIALS[kind].owner !== f.player || f.swarmCooldown > 0 || busy) return;
+  f.throwTimer = SPECIAL_WINDUP + THROW_POSE_TIME;
+  f.swarmCooldown = BUG_COOLDOWN;
+  sfx.whoosh();
+  showSpeech(f, SPECIALS[kind].name);
+  match.specials.push({ kind, t: -SPECIAL_WINDUP, hits: 0, el: null });
+}
+
+function updateSpecials(dt) {
+  for (const special of match.specials) {
+    const spec = SPECIALS[special.kind];
+    special.t += dt;
+    if (special.t < 0) continue;
+
+    const attacker = match.fighters[spec.owner];
+    const target = match.fighters[1 - spec.owner];
+    if (!special.el) {
+      special.el = spec.build(target);
+      special.el.classList.add('special');
+      $('#fx').appendChild(special.el);
+    }
+    // hitAt: one time, or a list of times for a multi-hit special.
+    const hitTimes = [spec.hitAt].flat();
+    while (special.hits < hitTimes.length && special.t >= hitTimes[special.hits]) {
+      const index = special.hits++;
+      if (match.phase !== 'fight' || target.health === 0) continue;
+      const point = spec.hitPoint?.(special.el, target, special.t, index) ?? {
+        x: target.x,
+        y: HURTBOX_HEIGHT / 2,
+      };
+      if (target.guard === special.kind) {
+        sfx.zap();
+        sparks(point.x, toStageY(point.y), '#ffd700');
+        popText('BLOCK!', target.x - 40, toStageY(point.y) - 60, '#ffd700', 14);
+      } else {
+        landHit(attacker, target, point, { unblockable: true, multiplier: spec.damage ?? 1 });
+      }
+    }
+    if (special.t >= spec.duration) special.el.classList.add('leaving');
+    if (special.t >= spec.duration + SPECIAL_FADE) {
+      special.el.remove();
+      special.done = true;
+    }
+  }
+  match.specials = match.specials.filter((s) => !s.done);
+}
+
+const rand = (min, max) => min + Math.random() * (max - min);
+
+function makeEl(tag, className, styles = {}) {
+  const el = document.createElement(tag);
+  el.className = className;
+  Object.assign(el.style, styles);
+  return el;
+}
+
+/** "friday afternoon hotfix": night falls over the QA half — dark sky, moon, twinkling stars. */
+function buildNightSky() {
+  const sky = makeEl('div', 'night-sky');
+  sky.appendChild(makeEl('div', 'moon'));
+  const clock = makeEl('div', 'night-clock');
+  clock.textContent = 'FRI 17:59 · DEPLOYED';
+  sky.appendChild(clock);
+  for (let i = 0; i < 34; i++) {
+    const size = Math.round(rand(2, 5)) + 'px';
+    sky.appendChild(
+      makeEl('span', 'star', {
+        left: rand(4, 470) + 'px',
+        top: rand(4, 320) + 'px',
+        width: size,
+        height: size,
+        animationDelay: rand(0, 1.2) + 's',
+      }),
+    );
+  }
+  return sky;
+}
+
+/** "AI code-gen": a pile of tasks to test rains down on Emilia until only her head sticks out. */
+function buildTaskPile(emi) {
+  const pile = makeEl('div', 'task-pile', { left: emi.x + 'px', bottom: GROUND + 'px' });
+  const rows = Math.floor(TASK_PILE_HEIGHT / TASK_ROW_HEIGHT);
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < 2; col++) {
+      const task = makeEl('div', 'task', {
+        left: -86 + col * 86 + rand(-6, 6) + 'px',
+        bottom: row * TASK_ROW_HEIGHT + 'px',
+        animationDelay: (row * 2 + col) * 0.045 + 's',
+      });
+      task.style.setProperty('--rot', rand(-9, 9) + 'deg');
+      const label = TASK_LABELS[Math.floor(Math.random() * TASK_LABELS.length)];
+      task.textContent = label + Math.floor(rand(100, 1000));
+      pile.appendChild(task);
+    }
+  }
+  return pile;
+}
+
+/** "undocumented changes": random, unrelated objects pop up all around Emilia. */
+function buildRandomStuff(emi) {
+  const cloud = makeEl('div', 'random-stuff', { left: emi.x + 'px', bottom: GROUND + 'px' });
+  const start = rand(0, Math.PI * 2);
+  RANDOM_STUFF.forEach((src, i) => {
+    const angle = start + (i / RANDOM_STUFF.length) * Math.PI * 2;
+    const size = rand(40, 58);
+    const img = makeEl('img', 'random-item', {
+      width: size + 'px',
+      height: size + 'px',
+      left: Math.cos(angle) * rand(95, 125) - size / 2 + 'px',
+      bottom: Math.max(0, 110 + Math.sin(angle) * rand(95, 120) - size / 2) + 'px',
+      animationDelay: i * 0.06 + 's, ' + rand(0, 0.6) + 's',
+    });
+    img.style.setProperty('--rot', rand(-30, 30) + 'deg');
+    img.src = src;
+    img.alt = '';
+    cloud.appendChild(img);
+  });
+  return cloud;
+}
+
+/**
+ * "missing ACs": tiles of Kuba's floor crumble and fall away, leaving holes into the void,
+ * while the unanswered Given / When / Then questions circle around him (see orbitAcQuestions).
+ */
+function buildMissingAcs() {
+  const root = makeEl('div', 'missing-acs');
+  const floor = makeEl('div', 'floor-holes', { top: FLOOR_TOP + 'px' });
+  root.appendChild(floor);
+  const cells = Array.from({ length: Math.floor(480 / FLOOR_CELL) }, (_, i) => i);
+  // Pick random tiles (Fisher–Yates), then drop them one after another.
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cells[i], cells[j]] = [cells[j], cells[i]];
+  }
+  cells.slice(0, FLOOR_HOLES).forEach((cell, i) => {
+    const delay = i * 0.08 + 's';
+    const left = cell * FLOOR_CELL + 'px';
+    floor.appendChild(makeEl('div', 'floor-gap', { left, animationDelay: delay }));
+    const chunk = makeEl('div', 'floor-chunk', { left, animationDelay: delay });
+    chunk.style.setProperty('--rot', rand(-40, 40) + 'deg');
+    floor.appendChild(chunk);
+  });
+  for (const question of AC_QUESTIONS) {
+    const el = makeEl('div', 'ac-question');
+    el.textContent = question;
+    root.appendChild(el);
+  }
+  return root;
+}
+
+const acAngle = (t, i) => t * AC_ORBIT.speed + (i / AC_QUESTIONS.length) * Math.PI * 2;
+
+/** Question `i` strikes Kuba: it flashes, and the hit sparks fly from where it is on the orbit. */
+function acQuestionHit(el, kuba, t, i) {
+  const q = el.querySelectorAll('.ac-question')[i];
+  q.classList.remove('strike');
+  void q.offsetWidth; // restart the flash
+  q.classList.add('strike');
+  return { x: kuba.x + Math.cos(acAngle(t, i)) * AC_ORBIT.rx, y: kuba.y + AC_ORBIT.height };
+}
+
+/** Per-frame: spread the questions evenly on an ellipse around Kuba; the near side is bigger. */
+function orbitAcQuestions(el, kuba, t) {
+  el.querySelectorAll('.ac-question').forEach((q, i) => {
+    const angle = acAngle(t, i);
+    const depth = Math.sin(angle); // 1 = in front of Kuba, -1 = behind
+    q.style.left = kuba.x + Math.cos(angle) * AC_ORBIT.rx + 'px';
+    q.style.top = toStageY(kuba.y + AC_ORBIT.height) + depth * AC_ORBIT.ry + 'px';
+    q.style.transform = `translate(-50%, -50%) scale(${0.85 + 0.2 * depth})`;
+    q.style.opacity = 0.65 + 0.35 * depth;
+  });
+}
+
+/**
+ * "bug priority wars": tasks of every size rain down on Kuba while he ducks left and right,
+ * then a giant one flattens him — only his legs and flailing arms stick out.
+ */
+function buildPriorityWars(kuba) {
+  const rain = makeEl('div', 'priority-rain', { left: kuba.x + 'px', bottom: GROUND + 'px' });
+  fighter(kuba.player).animate(
+    [
+      { transform: 'none' },
+      { transform: 'translateX(-34px)' },
+      { transform: 'translateX(30px)' },
+      { transform: 'translateX(-24px)' },
+      { transform: 'none' },
+    ],
+    { duration: 850, easing: 'ease-in-out' },
+  );
+  PRIORITY_LABELS.forEach((label, i) => {
+    const size = rand(38, 96);
+    const side = i % 2 ? 1 : -1; // near misses, alternating sides
+    const task = makeEl('div', 'priority-task', {
+      width: size + 'px',
+      height: size * 0.62 + 'px',
+      fontSize: Math.max(7, size / 9) + 'px',
+      left: side * rand(60, 150) - size / 2 + 'px',
+      bottom: '0px',
+      animationDelay: i * 0.11 + 's',
+    });
+    task.style.setProperty('--rot', rand(-14, 14) + 'deg');
+    task.textContent = label;
+    rain.appendChild(task);
+  });
+  const giant = makeEl('div', 'priority-giant');
+  giant.textContent = 'P0 BLOCKER';
+  giant.appendChild(makeEl('div', 'stuck-arm left'));
+  giant.appendChild(makeEl('div', 'stuck-arm right'));
+  rain.appendChild(giant);
+  return rain;
+}
+
+/**
+ * owner: who casts it; follow: the effect is anchored to the target and tracks it;
+ * hitAt: time of the hit, or a list of times (one hit each);
+ * hitPoint(el, target, t, index): optional, where hit number `index` lands (for the sparks);
+ * animate(el, target, t): optional per-frame update of the effect.
+ */
+const SPECIALS = {
+  // Kuba
+  hotfix: {
+    owner: 0,
+    name: 'friday afternoon hotfix',
+    duration: 2.6,
+    hitAt: 0.45,
+    build: buildNightSky,
+  },
+  codegen: {
+    owner: 0,
+    name: 'AI code-gen',
+    duration: 2.6,
+    hitAt: 0.9,
+    follow: true,
+    build: buildTaskPile,
+  },
+  undocumented: {
+    owner: 0,
+    name: 'undocumented changes',
+    duration: 2.4,
+    hitAt: 0.5,
+    follow: true,
+    build: buildRandomStuff,
+  },
+  // Emilia
+  acs: {
+    owner: 1,
+    name: 'missing ACs',
+    duration: 2.4,
+    hitAt: AC_HIT_TIMES,
+    build: buildMissingAcs,
+    animate: orbitAcQuestions,
+    hitPoint: acQuestionHit,
+  },
+  priority: {
+    owner: 1,
+    name: 'bug priority wars',
+    duration: 2.8,
+    hitAt: 1.15, // when the giant task lands
+    follow: true,
+    damage: PRIORITY_DAMAGE,
+    build: buildPriorityWars,
+  },
+};
+
+function spawnDoc(index) {
+  const kuba = match.fighters[0];
+  const el = document.createElement('img');
+  el.src = noDocsSrc;
+  el.className = 'doc';
+  el.alt = '';
+  el.style.width = el.style.height = DOC_SIZE + 'px';
+  $('#fx').appendChild(el);
+  match.docs.push({
+    x: kuba.x + kuba.dir * 36,
+    y: BUG_LANES[index % BUG_LANES.length],
+    vx: kuba.dir * BUG_SPEED,
+    el,
+  });
+}
+
+function spawnBug(index) {
+  const emi = match.fighters[1];
+  const el = document.createElement('img');
+  el.src = bugSrc;
+  el.className = 'bug';
+  el.alt = '';
+  el.style.width = BUG_WIDTH + 'px';
+  el.style.height = BUG_HEIGHT + 'px';
+  $('#fx').appendChild(el);
+  match.bugs.push({
+    x: emi.x + emi.dir * 36,
+    y: BUG_LANES[index % BUG_LANES.length],
+    vx: emi.dir * BUG_SPEED,
+    el,
+  });
+}
+
+const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+/**
+ * A swarm projectile reaches a fighter whose counter is up: it pops harmlessly.
+ * The first one resolves the swarm, with a quip.
+ */
+function blockSwarm(defender, projectile, volley, quips) {
+  sparks(projectile.x, toStageY(projectile.y), '#ffd700');
+  sfx.zap();
+  if (volley && !volley.resolved) {
+    volley.resolved = true;
+    sparks(defender.x, toStageY(defender.y + 120), '#ffd700');
+    popText('BLOCK!', defender.x - 40, toStageY(projectile.y) - 60, '#ffd700', 14);
+    showSpeech(defender, pick(quips));
+  }
+}
+
+/** Speech bubble above a fighter's head; replaces that fighter's previous bubble. */
+function showSpeech(f, text) {
+  $('#fx')
+    .querySelectorAll('.speech.p' + f.player)
+    .forEach((el) => el.remove());
+  const el = document.createElement('div');
+  el.className = 'speech p' + f.player;
+  el.textContent = text;
+  el.style.left = Math.max(16, f.x - 36) + 'px';
+  el.style.top = toStageY(f.y + FIGHTER_HEIGHT) - 72 + 'px';
+  $('#fx').appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+function updateBugs(dt) {
+  const volley = match.bugVolley;
+  // Keep releasing the rest of the series after the hit, so a close swarm still reads as five bugs.
+  if (volley && volley.spawnsLeft > 0) {
+    volley.timer -= dt;
+    while (volley.spawnsLeft > 0 && volley.timer <= 0) {
+      spawnBug(BUG_COUNT - volley.spawnsLeft);
+      volley.spawnsLeft--;
+      volley.timer += BUG_INTERVAL;
+    }
+  }
+
+  const kuba = match.fighters[0];
+  for (const bug of match.bugs) {
+    bug.x += bug.vx * dt;
+    const reached = bug.vx < 0 ? bug.x <= kuba.x : bug.x >= kuba.x;
+    const offscreen = bug.x < -BUG_WIDTH || bug.x > 960 + BUG_WIDTH;
+    if (!reached && !offscreen) continue;
+    bug.dead = true;
+    if (!reached || kuba.health === 0) continue;
+    if (kuba.guard === 'bugs') {
+      blockSwarm(kuba, bug, volley, BUG_QUIPS);
+    } else if (volley && !volley.resolved) {
+      volley.resolved = true;
+      landHit(match.fighters[1], kuba, bug, { unblockable: true });
+    } else {
+      sparks(bug.x, toStageY(bug.y), COLORS[1]);
+    }
+  }
+
+  match.bugs = match.bugs.filter((bug) => {
+    if (bug.dead) bug.el.remove();
+    return !bug.dead;
+  });
+
+  if (volley && volley.spawnsLeft === 0 && match.bugs.length === 0) match.bugVolley = null;
+}
+
+/** Kuba's no-docs series: the first document to reach Emilia lands the hit, unless she counters (M). */
+function updateDocs(dt) {
+  const volley = match.docVolley;
+  if (volley && volley.spawnsLeft > 0) {
+    volley.timer -= dt;
+    while (volley.spawnsLeft > 0 && volley.timer <= 0) {
+      spawnDoc(BUG_COUNT - volley.spawnsLeft);
+      volley.spawnsLeft--;
+      volley.timer += BUG_INTERVAL;
+    }
+  }
+
+  const emi = match.fighters[1];
+  for (const doc of match.docs) {
+    doc.x += doc.vx * dt;
+    const reached = doc.vx < 0 ? doc.x <= emi.x : doc.x >= emi.x;
+    const offscreen = doc.x < -DOC_SIZE || doc.x > 960 + DOC_SIZE;
+    if (!reached && !offscreen) continue;
+    doc.dead = true;
+    if (!reached || emi.health === 0) continue;
+    if (emi.guard === 'docs') {
+      blockSwarm(emi, doc, volley, DOC_BLOCK_QUIPS);
+    } else if (volley && !volley.resolved) {
+      volley.resolved = true;
+      landHit(match.fighters[0], emi, doc, { unblockable: true });
+    } else {
+      sparks(doc.x, toStageY(doc.y), COLORS[0]);
+    }
+  }
+
+  match.docs = match.docs.filter((doc) => {
+    if (doc.dead) doc.el.remove();
+    return !doc.dead;
+  });
+
+  if (volley && volley.spawnsLeft === 0 && match.docs.length === 0) match.docVolley = null;
 }
 
 /** Keep fighters inside the arena and apart from each other. */
@@ -394,13 +1021,17 @@ const randomInt = (min, max) => min + Math.floor(Math.random() * (max - min + 1)
  *   base       8–12 (random)
  *   + combo    +2 per consecutive hit landed within 1.6 s of the previous one (max +6)
  *   × crit     ×1.5 with a 12% chance
+ *   × special  ×`multiplier` (e.g. ×2 for "bug priority wars")
  *   × block    ×0.2 (chip damage, min 1) if the defender is blocking; blocks break combos
+ * Swarms and specials pass `unblockable`: the hold block (slot 1) doesn't stop them; only the
+ * matching counter does (see LAYOUT), and that path never calls this.
  */
-function landHit(attacker, defender, floppy) {
-  const hitX = floppy.x;
-  const hitY = toStageY(floppy.y);
+function landHit(attacker, defender, projectile, { unblockable = false, multiplier = 1 } = {}) {
+  const hitX = projectile.x;
+  const hitY = toStageY(projectile.y);
   // Still in block-stun from a previous blocked floppy counts as blocking.
-  const blocked = defender.blocking || (defender.stun > 0 && defender.stunPose === 'block');
+  const blocked =
+    !unblockable && (defender.blocking || (defender.stun > 0 && defender.stunPose === 'block'));
 
   const chained = match.clock - attacker.lastHitAt <= COMBO_WINDOW;
   attacker.combo = blocked ? 0 : chained ? attacker.combo + 1 : 1;
@@ -410,6 +1041,7 @@ function landHit(attacker, defender, floppy) {
   amount += Math.min(COMBO_BONUS_MAX, (attacker.combo - 1) * COMBO_BONUS);
   const crit = !blocked && Math.random() < CRIT_CHANCE;
   if (crit) amount *= CRIT_MULTIPLIER;
+  amount *= multiplier;
   if (blocked) amount = Math.max(1, amount * BLOCK_CHIP);
   amount = Math.round(amount);
 
@@ -460,6 +1092,7 @@ function landHit(attacker, defender, floppy) {
 
 function poseFor(f) {
   if (f.health === 0) return 'hit';
+  if (f.guard) return 'block';
   if (f.stun > 0) return f.stunPose;
   if (f.blocking) return 'block';
   if (f.throwTimer > 0) return 'throw'; // a mid-air throw briefly shows the throw pose
@@ -473,7 +1106,7 @@ function render() {
     el.style.left = f.x + 'px';
     el.style.right = 'auto';
     el.style.bottom = GROUND + f.y + 'px';
-    el.classList.toggle('blocking', f.blocking);
+    el.classList.toggle('blocking', f.blocking || !!f.guard);
     el.classList.toggle('airborne', f.y > 0);
     if (match.phase !== 'ready') setPose(f.player, poseFor(f));
   }
@@ -482,6 +1115,25 @@ function render() {
     p.el.style.top = toStageY(p.y) - FLOPPY_SIZE / 2 + 'px';
     p.el.style.transform = `rotate(${p.spin}deg)`;
   }
+  match.bugs.forEach((bug, i) => {
+    const bob = Math.sin(match.clock * 14 + i) * 6;
+    const face = bug.vx < 0 ? 1 : -1;
+    bug.el.style.left = bug.x - BUG_WIDTH / 2 + 'px';
+    bug.el.style.top = toStageY(bug.y) - BUG_HEIGHT / 2 + 'px';
+    bug.el.style.transform = `scaleX(${face}) translateY(${bob}px)`;
+  });
+  for (const special of match.specials) {
+    const spec = SPECIALS[special.kind];
+    const target = match.fighters[1 - spec.owner];
+    if (special.el && spec.follow) special.el.style.left = target.x + 'px';
+    if (special.el && spec.animate) spec.animate(special.el, target, special.t);
+  }
+  match.docs.forEach((doc, i) => {
+    const wobble = Math.sin(match.clock * 12 + i) * 12;
+    doc.el.style.left = doc.x - DOC_SIZE / 2 + 'px';
+    doc.el.style.top = toStageY(doc.y) - DOC_SIZE / 2 + 'px';
+    doc.el.style.transform = `rotate(${wobble}deg)`;
+  });
 }
 
 function updateHud() {
@@ -516,6 +1168,9 @@ function step(dt) {
   pressed.forEach((set) => set.clear());
   resolvePositions();
   updateFloppies(dt);
+  updateBugs(dt);
+  updateDocs(dt);
+  updateSpecials(dt);
 
   if (match.pendingKo && match.phase === 'fight') {
     match.pendingKo = false;

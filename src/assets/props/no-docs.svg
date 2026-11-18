@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- page with folded corner (pixel style) -->
+  <g shape-rendering="crispEdges">
+    <path fill="#000" d="M3 1h7v1h1v1h1v1h1v11H3z"/>
+    <path fill="#fff" d="M4 2h5v3h3v9H4z"/>
+    <path fill="#bbb" d="M10 2h1v1h1v2h-2z"/>
+    <path fill="#06c" d="M5 6h6v1H5zM5 8h6v1H5zM5 10h6v1H5zM5 12h4v1H5z"/>
+  </g>
+  <!-- red "no" sign over it -->
+  <circle cx="8" cy="8" r="6.6" fill="none" stroke="#e00" stroke-width="1.8"/>
+  <path d="M3.4 3.4 12.6 12.6" stroke="#e00" stroke-width="1.8"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- handle -->
+  <path d="M9 15h6l-2 13H8z" fill="#c2185b" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/>
+  <rect x="9.5" y="20" width="4" height="2" fill="#fff"/>
+  <!-- barrel -->
+  <rect x="3" y="5" width="21" height="11" rx="5.5" fill="#f48fb1" stroke="#000" stroke-width="1.5"/>
+  <!-- nozzle -->
+  <path d="M23 7h6v7h-6z" fill="#880e4f" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- rear vent -->
+  <circle cx="8.5" cy="10.5" r="3" fill="#fff" stroke="#000" stroke-width="1"/>
+  <path d="M7 10.5h3M8.5 9v3" stroke="#000" stroke-width="0.8"/>
+  <!-- hot air -->
+  <path d="M30.5 8.5q1 1 0 2M30.5 11q1 1 0 2" fill="none" stroke="#ff7043" stroke-width="1"/>
+</svg>

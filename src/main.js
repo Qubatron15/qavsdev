@@ -5,16 +5,16 @@ import './styles/effects.css';
 // import './styles/boss.css'; // DevOps boss: disabled
 import './styles/case-study.css';
 
-import kubaStand from './assets/sprites/kuba_stand.png';
-import kubaThrow from './assets/sprites/kuba_throw.png';
-import kubaBlock from './assets/sprites/kuba_block.png';
-import kubaHit from './assets/sprites/kuba_hit.png';
-import kubaJump from './assets/sprites/kuba_jump.png';
-import emiStand from './assets/sprites/emi_stand.png';
-import emiThrow from './assets/sprites/emi_throw.png';
-import emiBlock from './assets/sprites/emi_block.png';
-import emiHit from './assets/sprites/emi_hit.png';
-import emiJump from './assets/sprites/emi_jump.png';
+import kubaStand from './assets/sprites/kuba/kuba_stand.png';
+import kubaThrow from './assets/sprites/kuba/kuba_throw.png';
+import kubaBlock from './assets/sprites/kuba/kuba_block.png';
+import kubaHit from './assets/sprites/kuba/kuba_hit.png';
+import kubaJump from './assets/sprites/kuba/kuba_jump.png';
+import emiStand from './assets/sprites/emi/emi_stand.png';
+import emiThrow from './assets/sprites/emi/emi_throw.png';
+import emiBlock from './assets/sprites/emi/emi_block.png';
+import emiHit from './assets/sprites/emi/emi_hit.png';
+import emiJump from './assets/sprites/emi/emi_jump.png';
 
 import { initStageScaling } from './js/stage.js';
 import { loadFighter } from './js/sprites.js';

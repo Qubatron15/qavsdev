@@ -1,70 +1,909 @@
-/* Background: purple dev half, blue QA half, gold divider */
-#wall {
+/*
+ * Background, drawn from scratch (markup in index.html #scene). Coordinates inside a half are
+ * relative to it: the half starts under the HUD (stage y 80), the floor starts at y 330 (stage 410)
+ * and its 60px tiles line up with the "missing ACs" floor holes in fight.js.
+ */
+#scene {
   position: absolute;
-  inset: 80px 0 0;
-  background: linear-gradient(90deg, #2a1650 50%, #17304a 50%);
+  inset: 0;
+  overflow: hidden;
 }
 
-#wall::after {
-  content: '';
+#scene .half {
   position: absolute;
-  left: 478px;
-  top: 0;
+  top: 80px;
   bottom: 0;
-  width: 4px;
-  background: var(--gold);
-  box-shadow: 0 0 12px var(--gold);
+  width: 480px;
 }
 
-#floor {
+#scene .half > *,
+#scene .half::before {
   position: absolute;
+}
+
+/* Floor of both halves */
+#scene .half::before {
+  content: '';
   left: 0;
   right: 0;
-  top: 410px;
+  top: 330px;
   bottom: 0;
+}
+
+:root {
+  --rgb: linear-gradient(
+    90deg,
+    #ff004c,
+    #ff9f00,
+    #f6ff00,
+    #00ff85,
+    #00d4ff,
+    #8a5cff,
+    #ff00d4,
+    #ff004c
+  );
+}
+
+@keyframes rgb-flow {
+  to {
+    background-position: 480px 0;
+  }
+}
+
+@keyframes rgb-hue {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* ── PC battlestation: dark room, RGB everything ─────────────────────────── */
+#scene .pc {
+  left: 0;
   background:
-    repeating-linear-gradient(90deg, #0000 0 58px, #ffffff18 58px 60px),
-    linear-gradient(#251040, #0d0618);
+    radial-gradient(ellipse 260px 180px at 370px 190px, #00d4ff1c, #0000),
+    repeating-linear-gradient(90deg, #0000 0 59px, #ffffff06 59px 60px),
+    linear-gradient(#0c0a16, #151227 75%, #1b1730);
 }
 
-.monitor {
-  position: absolute;
-  width: 130px;
-  height: 84px;
-  border: 5px solid #3a3a44;
-  background: #0a0f1a;
+#scene .pc::before {
+  background:
+    linear-gradient(90deg, #0000 0 58px, #0008 58px 60px) 0 0 / 60px 100%,
+    linear-gradient(#ffffff12 0 2px, #0000 2px),
+    linear-gradient(#24203a, #0f0d1a);
+}
+
+.pc .rgb-strip {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  background: var(--rgb) 0 0 / 480px 100%;
+  box-shadow: 0 2px 14px #8a5cff88;
+  animation: rgb-flow 4s linear infinite;
+}
+
+.pc .wasd {
+  left: 26px;
+  top: 26px;
+  overflow: visible;
+  animation: rgb-hue 8s linear infinite;
+}
+
+.wasd rect {
+  fill: #0b0a16;
+  stroke: #00e5ff;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 3px #00e5ff) drop-shadow(0 0 8px #00e5ff88);
+}
+
+.wasd text {
+  font:
+    14px 'Press Start 2P',
+    monospace;
+  fill: #fff;
+  text-anchor: middle;
+  filter: drop-shadow(0 0 3px #00e5ff);
+}
+
+.pc .settings {
+  left: 168px;
+  top: 20px;
+  transform: rotate(-5deg);
+  width: 104px;
+  padding: 6px 8px 8px;
+  background: #0d0c1acc;
+  border: 3px solid #2d2a48;
   outline: 2px solid #000;
+  font:
+    12px/1 VT323,
+    monospace;
+  color: #aab;
 }
 
-.monitor::after {
+.settings h4 {
+  margin-bottom: 6px;
+  font:
+    7px 'Press Start 2P',
+    monospace;
+  color: #fff;
+}
+
+.settings p {
+  display: flex;
+  justify-content: space-between;
+}
+
+.settings b {
+  font-weight: normal;
+  color: #00ff85;
+}
+
+.settings i {
+  display: block;
+  height: 3px;
+  margin: 2px 0 5px;
+  background: linear-gradient(90deg, #00ff85, #00d4ff);
+}
+
+.pc .tower {
+  left: 8px;
+  top: 134px;
+  width: 78px;
+  height: 196px;
+  padding: 8px 8px 8px 12px;
+  background: linear-gradient(90deg, #08070e, #1b1928 30%, #121019);
+  border: 3px solid #000;
+  border-radius: 3px;
+}
+
+.tower .glass {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  background: linear-gradient(115deg, #ffffff14 0 20%, #ffffff05 20% 34%, #0000 34%), #07060c;
+  border: 2px solid #ff00d4;
+  box-shadow:
+    0 0 10px #ff00d4aa,
+    inset 0 0 14px #ff00d455;
+  animation: rgb-hue 6s linear infinite;
+}
+
+.tower .fan {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #111 0 5px, #0000 6px),
+    repeating-conic-gradient(#00d4ff 0 18deg, #0b0a14 18deg 60deg);
+  box-shadow:
+    0 0 0 2px #00d4ff,
+    0 0 10px #00d4ff;
+  animation: spin 0.6s linear infinite;
+}
+
+.tower .gpu {
+  width: 46px;
+  height: 10px;
+  margin-top: auto;
+  margin-bottom: 14px;
+  background: #222;
+  box-shadow:
+    inset 0 -2px #00ff85,
+    0 0 6px #00ff8588;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pc .monitor {
+  left: 290px;
+  top: 140px;
+  padding: 5px;
+  background: #050409;
+  border: 2px solid #2a2840;
+  outline: 2px solid #000;
+  box-shadow: 0 0 26px #00d4ff33;
+}
+
+.monitor svg {
+  display: block;
+}
+
+.monitor .sky {
+  fill: #2b3a5c;
+}
+.monitor .ground {
+  fill: #3d3426;
+}
+.monitor .wall-l {
+  fill: #4a4f63;
+}
+.monitor .wall-r {
+  fill: #3a3e50;
+}
+.monitor .door {
+  fill: #ffb347;
+  animation: neon-hum 2s ease-in-out infinite;
+}
+.monitor .crosshair {
+  fill: #7fff00;
+}
+.monitor .hp-bg {
+  fill: #0008;
+}
+.monitor .hp {
+  fill: #ff3b3b;
+}
+.monitor .gun {
+  fill: #15161d;
+  stroke: #3a3d4d;
+  stroke-width: 1;
+  animation: gun-sway 2.4s ease-in-out infinite;
+}
+.monitor .minimap {
+  fill: #0009;
+  stroke: #fff6;
+}
+.monitor .blip {
+  fill: #ff3b3b;
+  animation: blink 0.8s steps(1) infinite;
+}
+.monitor text {
+  font:
+    9px VT323,
+    monospace;
+}
+.monitor .ammo {
+  fill: #fff;
+  text-anchor: end;
+}
+.monitor .fps {
+  fill: #f6ff00;
+}
+
+@keyframes gun-sway {
+  50% {
+    transform: translate(-2px, 2px);
+  }
+}
+
+@keyframes neon-hum {
+  50% {
+    opacity: 0.75;
+  }
+}
+
+.pc .desk {
+  left: 280px;
+  top: 236px;
+  overflow: visible;
+}
+
+.desk .stand {
+  fill: #1c1a28;
+}
+.desk .pad {
+  fill: #0a0912;
+  stroke: #ff00d4;
+  stroke-width: 1;
+  animation: rgb-hue 5s linear infinite;
+}
+.desk .kbd {
+  fill: #121019;
+}
+.desk .keycaps {
+  fill: #00d4ff;
+  animation: rgb-hue 3s linear infinite;
+}
+.desk .mouse {
+  fill: #121019;
+}
+.desk .mouse-led {
+  fill: #ff004c;
+  animation: rgb-hue 3s linear infinite;
+}
+.desk .headset {
+  fill: none;
+  stroke: #2a2840;
+  stroke-width: 3;
+}
+.desk .cup {
+  fill: #2a2840;
+  stroke: #00ff85;
+  stroke-width: 1;
+}
+.desk .top {
+  fill: #1e1b2c;
+}
+.desk .leg {
+  fill: #13111d;
+}
+
+/* A "D" key of the neon that's on its last legs */
+.wasd .broken {
+  animation: neon-dying 3.2s steps(1) infinite;
+}
+
+@keyframes neon-dying {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  8% {
+    opacity: 0.15;
+  }
+  11% {
+    opacity: 1;
+  }
+  14% {
+    opacity: 0.15;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+/* Sticky notes all over the monitor bezel */
+.pc .note {
+  width: 18px;
+  height: 18px;
+  background: #ffe066;
+  transform: rotate(var(--rot));
+  box-shadow:
+    inset 0 5px #0000,
+    inset 0 6px #0002,
+    inset 0 10px #0000,
+    inset 0 11px #0002,
+    1px 2px 0 #0007;
+  z-index: 1;
+}
+
+.desk .crumbs {
+  fill: #d9a441;
+}
+
+/* The mess on the floor */
+.pc .mess {
+  left: 86px;
+  top: 284px;
+  overflow: visible;
+}
+
+.mess .cable {
+  fill: none;
+  stroke: #0a0910;
+  stroke-width: 3;
+}
+
+.mess .cable.two {
+  stroke: #3a3550;
+  stroke-width: 2;
+}
+
+.mess .box,
+.mess .box-lid {
+  fill: #c9a06a;
+  stroke: #6e5232;
+  stroke-width: 1;
+}
+
+.mess .box-lid {
+  fill: #b48a56;
+}
+
+.mess .box-logo {
+  fill: #d93a3a;
+}
+
+.mess .pizza {
+  fill: #f2b84b;
+  stroke: #c9762e;
+  stroke-width: 2;
+}
+
+.mess .pep {
+  fill: #c2302a;
+}
+
+.mess .hoodie {
+  fill: #4b3a78;
+}
+
+.mess .hoodie-cuff {
+  fill: #3a2c60;
+}
+
+/* Extra junk: on the tower, near the camera, by the pillar, on the neon */
+.pc .tower-top {
+  left: 0;
+  top: 104px;
+}
+
+.pc .mess-front {
+  left: 0;
+  top: 344px;
+}
+
+.pc .can-pyramid {
+  left: 424px;
+  top: 292px;
+}
+
+.pc .neon-sock {
+  left: 124px;
+  top: 90px;
+  transform: rotate(8deg);
+  transform-origin: 50% 0;
+}
+
+.tower-top .box,
+.mess-front .box {
+  fill: #c9a06a;
+  stroke: #6e5232;
+  stroke-width: 1;
+}
+
+.tower-top .box-logo {
+  fill: #d93a3a;
+}
+
+.pc .can {
+  fill: #2bd96b;
+  stroke: #0005;
+  stroke-width: 1;
+}
+
+.pc .can.pink {
+  fill: #ff4fd8;
+}
+
+.pc .sock {
+  fill: #e8e8f0;
+}
+
+.neon-sock .stripe {
+  fill: #e84d4d;
+}
+
+.pc .paper {
+  fill: #dedbe8;
+  stroke: #9a97aa;
+  stroke-width: 1;
+}
+
+.pc .chips {
+  fill: #ff7a1a;
+}
+
+.pc .chips-band {
+  fill: #ffd23b;
+}
+
+.mess-front .crust {
+  fill: #d99a4a;
+  stroke: #9a5e22;
+  stroke-width: 1;
+}
+
+.mess-front .cable {
+  fill: none;
+  stroke: #0a0910;
+  stroke-width: 3;
+}
+
+/* RGB light bleeding from under the desk onto the floor */
+.pc .desk-glow {
+  left: 270px;
+  top: 270px;
+  width: 204px;
+  height: 90px;
+  background: radial-gradient(ellipse at 50% 70%, #ff00d455, #0000 65%);
+  animation: rgb-hue 6s linear infinite;
+}
+
+/* ── Console living room: cosy, TV light ─────────────────────────────────── */
+#scene .console {
+  left: 480px;
+  background:
+    radial-gradient(ellipse 220px 160px at 110px 190px, #4aa8ff26, #0000),
+    repeating-linear-gradient(90deg, #ffffff07 0 2px, #0000 2px 26px),
+    linear-gradient(#241a3c, #2e2148 75%, #352650);
+}
+
+#scene .console::before {
+  background:
+    linear-gradient(90deg, #0000 0 58px, #0006 58px 60px) 0 0 / 60px 100%,
+    linear-gradient(#ffffff14 0 2px, #0000 2px),
+    linear-gradient(#5a3a2c, #2c1a14);
+}
+
+.console .tv-glow {
+  left: -20px;
+  top: 90px;
+  width: 260px;
+  height: 200px;
+  background: radial-gradient(ellipse, #6ec6ff33, #0000 65%);
+  animation: tv-flicker 3s steps(3) infinite;
+}
+
+@keyframes tv-flicker {
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.console .pad-neon {
+  left: 232px;
+  top: 22px;
+  overflow: visible;
+  fill: none;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.pad-neon .body {
+  stroke: #ff4fd8;
+  filter: drop-shadow(0 0 3px #ff4fd8) drop-shadow(0 0 9px #ff4fd888);
+  animation: neon-hum 4s ease-in-out infinite;
+}
+
+.pad-neon .dpad {
+  stroke: #fff;
+  filter: drop-shadow(0 0 4px #ff4fd8);
+}
+
+.pad-neon circle {
+  stroke-width: 2.5;
+  animation: press 2.4s steps(1) infinite;
+}
+
+.pad-neon .b1 {
+  color: #3ddc84;
+  stroke: #3ddc84;
+  filter: drop-shadow(0 0 4px #3ddc84);
+}
+.pad-neon .b2 {
+  color: #ff4d4d;
+  stroke: #ff4d4d;
+  filter: drop-shadow(0 0 4px #ff4d4d);
+  animation-delay: -0.6s;
+}
+.pad-neon .b3 {
+  color: #4aa8ff;
+  stroke: #4aa8ff;
+  filter: drop-shadow(0 0 4px #4aa8ff);
+  animation-delay: -1.2s;
+}
+.pad-neon .b4 {
+  color: #ffd23b;
+  stroke: #ffd23b;
+  filter: drop-shadow(0 0 4px #ffd23b);
+  animation-delay: -1.8s;
+}
+
+/* each face button "gets pressed" in turn: it fills with its own colour */
+@keyframes press {
+  0% {
+    fill: currentColor;
+  }
+  20%,
+  100% {
+    fill: none;
+  }
+}
+
+.console .shelf {
+  left: 380px;
+  top: 34px;
+  width: 92px;
+}
+
+.shelf .trophy {
+  display: block;
+  margin: 0 0 0 54px;
+  fill: #ffd23b;
+  filter: drop-shadow(0 0 5px #ffd23b88);
+}
+
+.shelf .games {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 58px;
+  padding: 0 6px;
+  border-bottom: 6px solid #6b4532;
+  box-shadow: 0 4px 0 #0005;
+  margin-bottom: 14px;
+}
+
+.shelf .games:first-of-type {
+  margin-top: 0;
+}
+
+.shelf .games i {
+  width: 9px;
+  height: 50px;
+  box-shadow:
+    inset 0 6px #fff4,
+    inset -2px 0 #0003;
+}
+
+.shelf .games i.lean {
+  transform: rotate(14deg);
+  transform-origin: 0 100%;
+}
+
+.console .tv {
+  left: 14px;
+  top: 126px;
+  padding: 6px;
+  background: #0b0a10;
+  border: 2px solid #2f2c3b;
+  outline: 2px solid #000;
+  box-shadow: 0 0 30px #6ec6ff44;
+}
+
+/* TV feet */
+.console .tv::after {
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -17px;
-  width: 20px;
-  height: 12px;
-  margin-left: -10px;
-  background: #3a3a44;
+  bottom: -14px;
+  width: 50px;
+  height: 10px;
+  margin-left: -25px;
+  background: #1a1822;
 }
 
-.monitor.code {
-  background: repeating-linear-gradient(#0000 0 6px, #00e5ff66 6px 8px);
+.tv svg {
+  display: block;
 }
 
-.prop {
+.tv .sky {
+  fill: #6ec6ff;
+}
+.tv .cloud {
+  fill: #fff;
+}
+.tv .hill {
+  fill: #3ec46d;
+}
+.tv .ground {
+  fill: #b5703a;
+}
+.tv .plat {
+  fill: #d98a4a;
+}
+.tv .coins {
+  fill: #ffd23b;
+  animation: blink 0.6s steps(1) infinite;
+}
+.tv .hero {
+  fill: #ff4d4d;
+  animation: hero-jump 1.6s ease-in-out infinite;
+}
+.tv .start {
+  font:
+    7px 'Press Start 2P',
+    monospace;
+  fill: #fff;
+  text-anchor: middle;
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes hero-jump {
+  0%,
+  40%,
+  100% {
+    transform: none;
+  }
+  60% {
+    transform: translate(18px, -26px);
+  }
+  80% {
+    transform: translate(34px, 0);
+  }
+}
+
+.console .cabinet {
+  left: 6px;
+  top: 250px;
+  width: 204px;
+  height: 80px;
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(#7a5038, #5a3a2a);
+  border: 2px solid #000;
+}
+
+.cabinet .cubby {
+  position: relative;
+  flex: 1;
+  background: #1a1016;
+  box-shadow: inset 0 4px 6px #000a;
+}
+
+.cabinet .console-box {
   position: absolute;
-  image-rendering: pixelated;
-  mix-blend-mode: lighten;
+  left: 8px;
+  right: 8px;
+  top: 14px;
+  height: 18px;
+  background: linear-gradient(#ececf2, #c8c8d2);
+  box-shadow: inset 0 -3px #4aa8ff;
 }
 
-.prop.guitar {
-  -webkit-mask-image: linear-gradient(transparent, #000 14%);
-  mask-image: linear-gradient(transparent, #000 14%);
-}
-
-.emoji-prop {
+.cabinet .console-box::after {
+  content: '';
   position: absolute;
-  font-size: 26px;
+  right: 6px;
+  top: 6px;
+  width: 4px;
+  height: 4px;
+  background: #4aa8ff;
+  box-shadow: 0 0 6px #4aa8ff;
+  animation: neon-hum 2s ease-in-out infinite;
+}
+
+.cabinet .ctrl {
+  position: absolute;
+  left: 10px;
+  bottom: 6px;
+  width: 34px;
+  height: 14px;
+  border-radius: 7px 7px 10px 10px;
+  background: #23202e;
+  box-shadow:
+    inset 6px 0 #ff4fd8,
+    inset -6px 0 #23202e;
+}
+
+.cabinet .ctrl.two {
+  left: 48px;
+  background: #e8e8ef;
+  box-shadow: inset 6px 0 #4aa8ff;
+}
+
+/* a stack of game cases in the right cubby */
+.cabinet .discs {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 40px;
+  background: repeating-linear-gradient(
+    #3b7dd8 0 6px,
+    #111 6px 8px,
+    #e84d4d 8px 14px,
+    #111 14px 16px,
+    #ececec 16px 22px,
+    #111 22px 24px
+  );
+}
+
+.console .sofa {
+  left: 214px;
+  top: 244px;
+}
+
+.sofa .back {
+  fill: #2f6f8f;
+}
+.sofa .seam {
+  fill: #24566f;
+}
+.sofa .seat {
+  fill: #3a86ab;
+  stroke: #24566f;
+  stroke-width: 2;
+}
+.sofa .arm {
+  fill: #2a6483;
+  stroke: #1d4a60;
+  stroke-width: 2;
+}
+.sofa .base {
+  fill: #24566f;
+}
+.sofa .foot {
+  fill: #3a2418;
+}
+.sofa .pillow {
+  fill: #ff7ab8;
+  stroke: #c94d8a;
+  stroke-width: 2;
+}
+.sofa .pillow.two {
+  fill: #ffd23b;
+  stroke: #c9a020;
+}
+.sofa .blanket {
+  fill: #f2efe6;
+}
+.sofa .blanket .stripe {
+  fill: #e84d4d;
+}
+.sofa .pad {
+  fill: #e8e8ef;
+  stroke: #4aa8ff;
+  stroke-width: 2;
+}
+
+.console .rug {
+  left: 10px;
+  top: 340px;
+  width: 320px;
+  height: 36px;
+  border-radius: 50%;
+  background: repeating-radial-gradient(ellipse, #8a3a5a 0 6px, #6a2a48 6px 12px);
+  border: 3px solid #b85a80;
+  opacity: 0.7;
+}
+
+.console .beanbag {
+  left: 378px;
+  top: 272px;
+  width: 96px;
+  height: 62px;
+  border-radius: 48% 52% 14px 14px / 70% 70% 14px 14px;
+  background: radial-gradient(ellipse at 35% 30%, #a77bff, #6a3fd0 60%, #4a2a96);
+  box-shadow: inset 0 -6px #0004;
+}
+
+/* ── Centre pillar with 1P / 2P lamps ────────────────────────────────────── */
+#scene .pillar {
+  position: absolute;
+  left: 464px;
+  width: 32px;
+  top: 80px;
+  height: 330px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 40px;
+  background: linear-gradient(90deg, #121019, #2a2738 45%, #3a2a4a 55%, #241a36);
+  border-left: 2px solid #000;
+  border-right: 2px solid #000;
+}
+
+.pillar span {
+  width: 24px;
+  padding: 4px 0;
+  text-align: center;
+  font:
+    6px 'Press Start 2P',
+    monospace;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 3px;
+  animation: lamp-swap 2s steps(1) infinite;
+}
+
+.pillar .p1 {
+  background: #00e5ff;
+  box-shadow: 0 0 8px #00e5ff;
+}
+
+.pillar .p2 {
+  background: #ff4fd8;
+  box-shadow: 0 0 8px #ff4fd8;
+  animation-delay: -1s;
+}
+
+@keyframes lamp-swap {
+  50% {
+    filter: brightness(0.35);
+    box-shadow: none;
+  }
 }
 
 /* Fighters: positioned by fight.js (left = centre − 75px, bottom = ground + jump height) */
