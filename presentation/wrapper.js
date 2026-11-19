@@ -159,14 +159,17 @@ async function attack(player, id) {
 }
 
 // ── Getting the arena into the right mode ───────────────────────────────────────────────────
+const inVersusFight = () => phase() === 'fight' && !match().boss;
+
 async function ensureVersusFight() {
-  if (phase() === 'fight' && !match().boss) return;
-  if (match()?.boss || phase() !== 'ready') {
+  if (inVersusFight()) return;
+  const versusIntro = phase() === 'intro' && !match().boss; // already starting: just wait
+  if (!versusIntro && (match()?.boss || phase() !== 'ready')) {
     await tap(KEYS.reset);
     await waitUntil(() => phase() === 'ready');
   }
-  await tap(KEYS.start);
-  await waitUntil(() => phase() === 'fight' && !match().boss);
+  if (!versusIntro) await tap(KEYS.start);
+  await waitUntil(inVersusFight);
 }
 
 async function startBossFight() {
@@ -250,6 +253,12 @@ async function playNext() {
     do {
       queued = false;
       if (beatIndex >= BEATS.length) beatIndex = 0; // after the boss: start the show over
+      if (beatIndex === 0 && !inVersusFight()) {
+        // Starting the match is a press of its own: the first attack waits for the next SPACE.
+        indicator.textContent = '▶ START';
+        await ensureVersusFight();
+        continue;
+      }
       const beat = BEATS[beatIndex++];
       showStep(beatIndex, beat.title);
       await beat.run();
@@ -290,6 +299,7 @@ function showStep(index, title) {
   const total = BEATS.length;
   if (title) indicator.textContent = `▶ ${index}/${total} ${title}`;
   else if (index >= total) indicator.textContent = `■ ${total}/${total} · SPACE: from the top`;
+  else if (index === 0 && !inVersusFight()) indicator.textContent = 'SPACE ▸ START';
   else indicator.textContent = `SPACE ▸ ${index + 1}/${total} ${BEATS[index].title}`;
 }
 showStep(0);
