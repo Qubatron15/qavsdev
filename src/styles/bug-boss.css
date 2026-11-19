@@ -1,0 +1,131 @@
+/* Co-op bug boss (key T), see src/js/fight/boss.js */
+#bug-boss {
+  position: absolute;
+  display: none;
+  z-index: 2;
+  pointer-events: none;
+}
+
+#bug-boss.on {
+  display: block;
+}
+
+#bug-boss img {
+  display: block;
+  width: 100%;
+  image-rendering: pixelated;
+  transform-origin: 50% 100%;
+  animation: boss-crawl 0.9s steps(3) infinite;
+  filter: drop-shadow(0 0 10px #ff3b1f88);
+  user-select: none;
+}
+
+/* Ground shadow */
+#bug-boss::after {
+  content: '';
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  bottom: 6px;
+  height: 18px;
+  border-radius: 50%;
+  background: #000a;
+  z-index: -1;
+}
+
+#bug-boss.hit img {
+  animation: boss-hurt 0.3s;
+}
+
+#bug-boss.angry img {
+  animation: boss-rage 0.35s steps(2) infinite;
+  filter: drop-shadow(0 0 16px #ff1a00) saturate(1.6);
+}
+
+#bug-boss.defeated img {
+  animation: boss-squash 1.4s ease-in forwards;
+}
+
+#bug-boss.escaped img {
+  animation: boss-escape 1.6s ease-in forwards;
+}
+
+@keyframes boss-crawl {
+  50% {
+    transform: translateY(-3px) scaleX(1.02);
+  }
+}
+
+@keyframes boss-hurt {
+  0% {
+    filter: brightness(3) saturate(0);
+    transform: translateX(-6px) scale(0.97);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes boss-rage {
+  50% {
+    transform: translateY(-5px) scale(1.04, 0.97);
+  }
+}
+
+@keyframes boss-squash {
+  30% {
+    transform: scale(1.15, 0.8);
+    filter: brightness(2);
+  }
+  100% {
+    transform: scale(1.5, 0.05);
+    filter: grayscale(1) brightness(0.5);
+    opacity: 0.6;
+  }
+}
+
+@keyframes boss-escape {
+  20% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(40px) scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* Boss health bar: under the HUD, across the middle */
+#boss-hud {
+  position: absolute;
+  top: 92px;
+  left: 180px;
+  right: 180px;
+  display: none;
+  z-index: 3;
+  font-size: 9px;
+  text-align: center;
+  color: #ff6a4a;
+  text-shadow: 2px 2px #000;
+}
+
+#boss-hud.on {
+  display: block;
+}
+
+#boss-hud .health-bar {
+  height: 16px;
+  border-color: #ffd700;
+}
+
+#boss-health-fill {
+  background: linear-gradient(#ff5a2a, #b00e00);
+}
+
+#boss-hud.danger .health-bar {
+  animation: blink 0.4s steps(2) infinite;
+}
+
+/* In boss mode nobody plays for round wins */
+#game.boss-mode .wins {
+  display: none;
+}

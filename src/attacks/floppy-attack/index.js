@@ -19,10 +19,11 @@ const FLOPPY_SPEED = 540; // px/s
 const FLOPPY_HEIGHT = 120; // launch height above the thrower's feet
 const THROW_COOLDOWN = 0.55; // s between throws (and only one floppy in flight)
 
+// A target may bring its own hurtbox (the co-op boss is much bigger than a fighter).
 const overlaps = (floppy, f) =>
-  Math.abs(floppy.x - f.x) < HURTBOX_HALF_WIDTH + FLOPPY_SIZE / 2 &&
+  Math.abs(floppy.x - f.x) < (f.halfWidth ?? HURTBOX_HALF_WIDTH) + FLOPPY_SIZE / 2 &&
   floppy.y + FLOPPY_SIZE / 2 > f.y &&
-  floppy.y - FLOPPY_SIZE / 2 < f.y + HURTBOX_HEIGHT;
+  floppy.y - FLOPPY_SIZE / 2 < f.y + (f.height ?? HURTBOX_HEIGHT);
 
 /**
  * Both players, keys 1 / 6: a thrown floppy disk. Blockable: the classic hold block (Z / N, slot 1)
@@ -92,7 +93,7 @@ export default {
 
     for (const p of match.floppies) {
       if (p.dead) continue;
-      const target = match.fighters[1 - p.owner];
+      const target = ctx.targetOf(p.owner);
       if (target.health > 0 && overlaps(p, target)) {
         p.dead = true;
         ctx.landHit(match.fighters[p.owner], target, p);

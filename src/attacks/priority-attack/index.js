@@ -11,7 +11,8 @@ const PRIORITY_LABELS = ['P1', 'P2', 'P3', 'MAJOR', 'URGENT!', 'P2', 'CRITICAL']
  */
 function buildPriorityWars(kuba) {
   const rain = makeEl('div', 'priority-rain', { left: kuba.x + 'px', bottom: GROUND + 'px' });
-  fighter(kuba.player).animate(
+  (kuba.el ?? fighter(kuba.player)).animate(
+    // kuba.el: the co-op boss dodges too
     [
       { transform: 'none' },
       { transform: 'translateX(-34px)' },

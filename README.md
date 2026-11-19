@@ -34,6 +34,8 @@ Each player has a movement cluster and two rows that line up column by column: t
 
 `G` triggers the **environment attack** ("flaky environments"). It belongs to neither player.
 
+`T` starts the **co-op boss fight** instead of a match: a giant bug (`src/assets/sprites/bug_boss.png`) crawls into the middle of the arena and both players attack it with their usual keys. Every attack that would hit the opponent hits the boss instead, and each hit takes a little of its 500 HP (shown as a bar under the HUD). The players can't hurt each other, can't walk past the boss, and `G` is off. Squash it within 90 s to win; otherwise it ships to prod. Tuning and the boss element live in `src/js/fight/boss.js`.
+
 `Space` starts a match (and a rematch after the match ends). Best of three rounds, 60 s each. The keymap panel is shown before a match and after it ends; the caption bar keeps a short version during the fight. Both are generated from `LAYOUT` in `src/js/fight.js`, so changing keys there updates the UI too.
 
 - **Floppy throw:** 8–12 damage, +2 per combo hit (hits within 1.6 s, max +6), 12% chance of a ×1.5 critical. One floppy in flight per player.

@@ -100,11 +100,12 @@ export function createVolleyAttack(config) {
         }
       }
 
-      const target = match.fighters[1 - owner];
+      const target = ctx.targetOf(owner);
+      const front = target.halfWidth ?? 0; // the co-op boss is hit at its edge, not its centre
       for (const p of state.items) {
         p.x += p.vx * dt;
         ctx.leaveTrail(p, dt, config.fx.color, trailSize);
-        const reached = p.vx < 0 ? p.x <= target.x : p.x >= target.x;
+        const reached = p.vx < 0 ? p.x <= target.x + front : p.x >= target.x - front;
         const offscreen = p.x < -width || p.x > STAGE_WIDTH + width;
         if (!reached && !offscreen) continue;
         p.dead = true;

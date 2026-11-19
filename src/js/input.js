@@ -7,7 +7,13 @@ import { resetArena } from './reset.js';
 // Story beats: disabled
 // import { BeatCancelled } from './timing.js';
 // import { beats } from './beats/index.js';
-import { handleFightKey, releaseAllKeys, renderControls, startMatch } from './fight.js';
+import {
+  handleFightKey,
+  releaseAllKeys,
+  renderControls,
+  startBossMatch,
+  startMatch,
+} from './fight.js';
 
 function onKeyDown(event) {
   if (event.key === 'Escape') {
@@ -36,6 +42,7 @@ function onKeyDown(event) {
     event.preventDefault();
     return startMatch();
   }
+  if (event.code === 'KeyT') return startBossMatch();
 
   // Story beats (keys 1-8): disabled
   // const beat = beats[key];

@@ -474,13 +474,21 @@
             </div>
           </div>
         </div>
+        <!-- Co-op boss health (key T), see src/js/fight/boss.js -->
+        <div id="boss-hud">
+          BUG BOSS · <span id="boss-health-label">100%</span>
+          <div class="health-bar">
+            <i class="health-ghost" id="boss-health-ghost"></i>
+            <i class="health-fill" id="boss-health-fill"></i>
+          </div>
+        </div>
         <div id="controls"></div>
         <div id="flash"></div>
 
         <div id="caption">
           <div id="caption-text"></div>
           <div class="help">
-            [SPACE] Fight | [BACKSPACE] Reset |
+            [SPACE] Fight | [T] Co-op boss | [BACKSPACE] Reset |
             <span id="sound-toggle">🔊 SOUND [=]</span>
           </div>
         </div>

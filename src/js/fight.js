@@ -37,6 +37,16 @@ import {
   THROW_POSE_TIME,
 } from './fight/constants.js';
 import { randomInt, toStageY } from './fight/util.js';
+import {
+  BOSS_COLOR,
+  BOSS_GAP,
+  BOSS_TIME,
+  BOSS_X,
+  flashBoss,
+  newBoss,
+  renderBoss,
+  setBossOutcome,
+} from './fight/boss.js';
 
 /*
  * Two-player fight: a fixed-timestep simulation driven by requestAnimationFrame.
@@ -67,6 +77,8 @@ const SPECIAL_WINDUP = 0.35; // s of throw pose before the effect starts
 
 // Environment attack (src/attacks/environment-attack): belongs to neither player.
 const ENV_KEY = 'KeyG';
+// Co-op boss mode (src/js/fight/boss.js): started instead of a match, see input.js.
+const BOSS_KEY = 'KeyT';
 
 const BASE_DAMAGE = [8, 12]; // random inclusive range
 const CRIT_CHANCE = 0.12;
@@ -181,7 +193,8 @@ export function renderControls() {
     }).join('') +
     '<p class="controls-note">Same column = same slot: your block in slot N counters your opponent\'s attack in slot N. ' +
     'Slot 1 is held (chip damage); counters must be pressed while that attack is incoming — a wrong guess locks them for a moment.</p>' +
-    `<p class="controls-note">${keycap(ENV_KEY, environment.name)} environment attack: the arena quakes and the floor turns to lava — it burns <b>both</b> fighters (jump to dodge a burn).</p>`;
+    `<p class="controls-note">${keycap(ENV_KEY, environment.name)} environment attack: the arena quakes and the floor turns to lava — it burns <b>both</b> fighters (jump to dodge a burn).</p>` +
+    `<p class="controls-note">${keycap(BOSS_KEY, 'co-op boss')} co-op: a giant bug crawls into the middle — team up and squash it with your attacks before the time runs out.</p>`;
 }
 
 const showControls = () =>
@@ -201,6 +214,7 @@ const ctx = {
     return match;
   },
   landHit,
+  targetOf,
   freeze,
   flashFor,
   showSpeech,
@@ -238,8 +252,10 @@ function clearAttacks(m) {
   for (const attack of [...PROJECTILES, environment]) attack.clear(m);
 }
 
-function newMatch() {
+function newMatch(mode = 'versus') {
   const m = {
+    mode, // 'versus' (Space) or 'boss' (T: co-op against the bug boss)
+    boss: mode === 'boss' ? newBoss() : null,
     phase: 'ready', // ready → intro → fight → roundOver → (intro | matchOver)
     phaseTime: 0,
     round: 0,
@@ -256,8 +272,8 @@ function newMatch() {
 
 // ── Public API ──────────────────────────────────────────────────────────────
 
-/** Back to the "press SPACE" screen with fresh fighters. */
-export function resetFight() {
+/** Back to the "press SPACE" screen with fresh fighters (`mode` sets up the next match). */
+export function resetFight(mode) {
   clearProjectiles();
   clearFlashy();
   hitstop = 0;
@@ -265,7 +281,8 @@ export function resetFight() {
   $('#fx')
     .querySelectorAll('.speech')
     .forEach((el) => el.remove());
-  match = newMatch();
+  match = newMatch(mode);
+  renderBoss(match.boss);
   held.forEach((set) => set.clear());
   pressed.forEach((set) => set.clear());
   envPressed = false;
@@ -287,6 +304,13 @@ export function resetFight() {
 export function startMatch() {
   if (match.phase !== 'ready' && match.phase !== 'matchOver') return;
   resetFight();
+  startRound(1);
+}
+
+/** Start (or restart) the co-op boss fight. */
+export function startBossMatch() {
+  if (match.phase !== 'ready' && match.phase !== 'matchOver') return;
+  resetFight('boss');
   startRound(1);
 }
 
@@ -328,7 +352,7 @@ function startRound(round) {
   clearProjectiles();
   clearFlashy();
   match.round = round;
-  match.timeLeft = ROUND_TIME;
+  match.timeLeft = match.boss ? BOSS_TIME : ROUND_TIME;
   match.fighters.forEach((f) => {
     Object.assign(f, newFighter(f.player), { wins: f.wins, lastHitAt: -Infinity });
     fighter(f.player).classList.remove('ko', 'hit', 'blocking', 'winner');
@@ -336,7 +360,7 @@ function startRound(round) {
   setPhase('intro');
   showControls();
   updateHud();
-  setCaption('ROUND ' + round, CONTROLS_HELP);
+  setCaption(match.boss ? 'CO-OP: SQUASH THE BUG' : 'ROUND ' + round, CONTROLS_HELP);
 }
 
 function setPhase(phase) {
@@ -354,6 +378,7 @@ function at(seconds, key, fn) {
 }
 
 function endRound(reason) {
+  if (match.boss) return endBossFight(reason);
   const [a, b] = match.fighters;
   const winner = a.health === b.health ? null : a.health > b.health ? a : b;
   if (winner) winner.wins++;
@@ -383,12 +408,63 @@ function endRound(reason) {
   updateHud();
 }
 
+/** Boss mode: 'ko' = the boss is squashed (team wins), 'time' = it got away. */
+function endBossFight(reason) {
+  const { boss } = match;
+  setPhase('roundOver');
+  clearProjectiles();
+  if (reason === 'ko') {
+    setBossOutcome('defeated');
+    koBlast(boss.x, toStageY(boss.height / 2), BOSS_COLOR);
+    freeze(KO_FREEZE);
+    slowmo = KO_SLOWMO;
+    sfx.boom();
+    sfx.heavy();
+    shake(3);
+    banner('SQUASHED!', 'ko', 2000);
+  } else {
+    setBossOutcome('escaped');
+    sfx.siren();
+    screenFlash('#ff2a2a', 300, 0.5);
+    banner('TIME!', 'ko', 1600);
+  }
+  updateHud();
+}
+
+function updateBossResult() {
+  const { boss } = match;
+  const won = boss.health === 0;
+  at(1.7, 'result', () => {
+    if (won) {
+      for (const f of match.fighters) {
+        fighter(f.player).classList.add('winner');
+        victory(f.player, f.x, toStageY(f.y), COLORS[f.player]);
+      }
+      screenFlash('#ffd700', 400, 0.6);
+      banner('BUG FIXED!<br>TEAM WINS!', '', 2000);
+      sfx.candy();
+    } else {
+      banner('BUG SHIPPED<br>TO PROD!', '', 2000);
+      sfx.lowHealth();
+    }
+  });
+  at(3.8, 'next', () => {
+    setPhase('matchOver');
+    showControls();
+    const hits = NAMES.map((name, i) => `${name} ${boss.hitsBy[i]}`).join(' · ');
+    setCaption(
+      won ? 'BUG SQUASHED' : 'GAME OVER',
+      `Hits: ${hits}. Press [T] to fight the bug again · [SPACE] versus · [BACKSPACE] reset`,
+    );
+  });
+}
+
 function updatePhase(dt) {
   match.phaseTime += dt;
 
   if (match.phase === 'intro') {
     at(0, 'round', () => {
-      banner('ROUND ' + match.round, '', 1100);
+      banner(match.boss ? 'BUG BOSS!' : 'ROUND ' + match.round, '', 1100);
       roundIntro(match.round);
       sfx.zap();
       sfx.sparkle();
@@ -404,6 +480,8 @@ function updatePhase(dt) {
   } else if (match.phase === 'fight') {
     match.timeLeft = Math.max(0, match.timeLeft - dt);
     if (match.timeLeft === 0) endRound('time');
+  } else if (match.phase === 'roundOver' && match.boss) {
+    updateBossResult();
   } else if (match.phase === 'roundOver') {
     const winner = match.roundWinner;
     at(1.7, 'result', () => {
@@ -499,7 +577,7 @@ function updateFighter(f, dt) {
 /** Is the opponent's attack `kind` currently on its way to fighter `f`? */
 function incoming(f, kind) {
   const attack = ATTACKS[kind];
-  if (match.phase !== 'fight' || attack?.owner !== 1 - f.player) return false;
+  if (match.phase !== 'fight' || match.boss || attack?.owner !== 1 - f.player) return false;
   if (attack.type === 'volley') return attack.isIncoming(match);
   return match.specials.some((s) => s.kind === kind && s.hits < [attack.hitAt].flat().length);
 }
@@ -572,7 +650,7 @@ function updateSpecials(dt) {
     if (special.t < 0) continue;
 
     const attacker = match.fighters[spec.owner];
-    const target = match.fighters[1 - spec.owner];
+    const target = targetOf(spec.owner);
     if (!special.el) {
       special.el = spec.build(target);
       special.el.classList.add('special');
@@ -624,6 +702,12 @@ function showSpeech(f, text) {
 function resolvePositions() {
   const [a, b] = match.fighters;
   for (const f of match.fighters) f.x = Math.min(ARENA_MAX_X, Math.max(ARENA_MIN_X, f.x));
+  if (match.boss) {
+    // The boss blocks the middle: Kuba stays on its left, Emilia on its right.
+    a.x = Math.min(a.x, BOSS_X - BOSS_GAP);
+    b.x = Math.max(b.x, BOSS_X + BOSS_GAP);
+    return;
+  }
   const overlap = MIN_GAP - (b.x - a.x);
   if (overlap > 0) {
     // Push both apart, but never through a wall.
@@ -638,6 +722,11 @@ function resolvePositions() {
       b.x = ARENA_MAX_X;
     }
   }
+}
+
+/** Who player `owner`'s attacks hit: the opponent, or the boss in co-op mode. */
+function targetOf(owner) {
+  return match.boss ?? match.fighters[1 - owner];
 }
 
 /** A projectile drops a glowing trail dot every TRAIL_INTERVAL. */
@@ -689,6 +778,8 @@ function landHit(attacker, defender, projectile, { unblockable = false, multipli
   amount *= multiplier;
   if (blocked) amount = Math.max(1, amount * BLOCK_CHIP);
   amount = Math.round(amount);
+
+  if (defender.isBoss) return hitBoss(attacker, defender, hitX, hitY, amount, crit, multiplier);
 
   const wasSafe = defender.health > DANGER_HEALTH;
   defender.health = Math.max(0, defender.health - amount);
@@ -745,6 +836,31 @@ function landHit(attacker, defender, projectile, { unblockable = false, multipli
   }
 }
 
+/** A hit on the boss: it loses a little health; at zero the team wins (see endBossFight). */
+function hitBoss(attacker, boss, hitX, hitY, amount, crit, multiplier) {
+  boss.health = Math.max(0, boss.health - amount);
+  boss.hitsBy[attacker.player]++;
+  attacker.hitsLanded++;
+  flashBoss();
+  sfx.hit();
+  const heavy = crit || multiplier > 1;
+  if (heavy) sfx.heavy();
+  const color = COLORS[attacker.player];
+  sparks(hitX, hitY, color);
+  sparks(hitX, hitY, BOSS_COLOR);
+  impact(hitX, hitY, color, 1 + (crit ? 0.6 : 0) + (multiplier > 1 ? 0.4 : 0));
+  freeze(crit ? HITSTOP.crit : heavy ? HITSTOP.heavy : HITSTOP.hit);
+  shake(heavy ? 1.5 : 0.6);
+  popText('-' + amount + ' HP', hitX - 30, hitY - 60, '#f66', crit ? 22 : 16);
+  if (crit) {
+    screenFlash(color, 160, 0.45);
+    slamText('CRITICAL!', hitX, hitY - 110, '#ffea00', 24);
+  }
+  comboCounter(attacker.player, attacker.combo);
+  updateHud();
+  if (boss.health === 0) match.pendingKo = true;
+}
+
 // ── Rendering ───────────────────────────────────────────────────────────────
 
 function poseFor(f) {
@@ -771,7 +887,7 @@ function render() {
   for (const attack of PROJECTILES) attack.render(match);
   for (const special of match.specials) {
     const spec = SPECIALS[special.kind];
-    const target = match.fighters[1 - spec.owner];
+    const target = targetOf(spec.owner);
     if (special.el && spec.follow) special.el.style.left = target.x + 'px';
     if (special.el && spec.animate) spec.animate(special.el, target, special.t);
   }
@@ -780,6 +896,7 @@ function render() {
 function updateHud() {
   const [a, b] = match.fighters;
   setHealth(a.health, b.health);
+  renderBoss(match.boss);
   for (const f of match.fighters) {
     setDanger(f.player, match.phase !== 'ready' && f.health > 0 && f.health <= DANGER_HEALTH);
     $('#wins-' + f.player).textContent =
@@ -818,7 +935,7 @@ function step(dt) {
   resolvePositions();
   for (const attack of PROJECTILES) attack.update(dt, ctx);
   updateSpecials(dt);
-  if (envPressed) environment.try(ctx);
+  if (envPressed && !match.boss) environment.try(ctx); // the lava would only burn the team
   envPressed = false;
   environment.update(dt, ctx);
 
