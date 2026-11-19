@@ -313,6 +313,177 @@
   }
 }
 
+/* G: "flaky environments" — the arena quakes, the floor cracks and turns to lava, burning both */
+.flaky-env {
+  inset: 0;
+  z-index: 5;
+}
+
+.flaky-env > * {
+  position: absolute;
+}
+
+.env-status {
+  left: 50%;
+  top: 92px;
+  translate: -50% 0;
+  padding: 4px 8px;
+  font-size: 9px;
+  white-space: nowrap;
+  color: #ff5252;
+  background: #000c;
+  border: 2px solid #ff5252;
+  box-shadow: 0 0 12px #ff3030;
+  animation: env-blink 0.5s steps(2) infinite;
+}
+
+@keyframes env-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.lava-crack {
+  height: 3px;
+  background: #ffd166;
+  box-shadow:
+    0 0 6px #ff8a00,
+    0 0 14px #ff3d00;
+  transform: rotate(var(--rot));
+  transform-origin: left center;
+  animation: crack-open 0.25s ease-out both;
+}
+
+@keyframes crack-open {
+  from {
+    transform: rotate(var(--rot)) scaleX(0);
+  }
+}
+
+.lava {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(ellipse 50px 8px at 30% 35%, #fff4a855, #0000 70%),
+    radial-gradient(ellipse 70px 10px at 75% 65%, #ffd16644, #0000 70%),
+    linear-gradient(#ffe066, #ff8a00 14%, #ff3d00 42%, #b31200 75%, #4a0500);
+  background-size:
+    260px 100%,
+    340px 100%,
+    100% 100%;
+  box-shadow:
+    0 -2px 0 #ffd166,
+    0 -10px 28px #ff5a00;
+  transform-origin: bottom;
+  animation:
+    lava-rise 0.35s ease-out both,
+    lava-flow 2.4s linear infinite;
+}
+
+/* Bubbling surface */
+.lava::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -7px;
+  height: 10px;
+  background: radial-gradient(circle at 50% 100%, #ffb000 6px, #0000 7px) 0 0 / 28px 10px repeat-x;
+  animation: lava-wave 0.7s linear infinite;
+}
+
+/* Heat haze above the lava */
+.lava::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 220px;
+  background: linear-gradient(#0000, #ff3d0030 55%, #ff5a0066);
+  pointer-events: none;
+  animation: heat-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes heat-pulse {
+  from {
+    opacity: 0.5;
+  }
+}
+
+@keyframes lava-rise {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+}
+
+@keyframes lava-flow {
+  to {
+    background-position:
+      260px 0,
+      -340px 0,
+      0 0;
+  }
+}
+
+@keyframes lava-wave {
+  to {
+    background-position: 28px 0;
+  }
+}
+
+.lava-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff6b0, #ffb000 50%, #ff5a00);
+  animation: lava-bubble 0.9s ease-out infinite both;
+}
+
+@keyframes lava-bubble {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(-24px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-34px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.ember {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffd166;
+  box-shadow: 0 0 6px #ff5a00;
+  animation: ember-rise 1.4s ease-out infinite both;
+}
+
+@keyframes ember-rise {
+  from {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--drift), -260px);
+    opacity: 0;
+  }
+}
+
+/* A fighter standing in the lava glows hot from below */
+.fighter.on-lava {
+  filter: drop-shadow(0 8px 6px #ff5a00) drop-shadow(0 0 14px #ff3d00aa);
+}
+
 /* P: "bug priority wars" — tasks of every size rain on Kuba, a giant one flattens him */
 .priority-rain {
   width: 0;

@@ -32,6 +32,8 @@ Each player has a movement cluster and two rows that line up column by column: t
 | 5    | `5` undocumented    | —               | —                   | `/` vs undocumented |
 | Move | `A` / `D`, `W` jump |                 | `J` / `L`, `I` jump |                     |
 
+`G` triggers the **environment attack** ("flaky environments"). It belongs to neither player.
+
 `Space` starts a match (and a rematch after the match ends). Best of three rounds, 60 s each. The keymap panel is shown before a match and after it ends; the caption bar keeps a short version during the fight. Both are generated from `LAYOUT` in `src/js/fight.js`, so changing keys there updates the UI too.
 
 - **Floppy throw:** 8–12 damage, +2 per combo hit (hits within 1.6 s, max +6), 12% chance of a ×1.5 critical. One floppy in flight per player.
@@ -39,6 +41,7 @@ Each player has a movement cluster and two rows that line up column by column: t
 - **Swarms (slot 2):** five bugs / crossed-out documents fly at the opponent and deal one standard hit. The matching counter (`X` for Kuba, `M` for Emilia) pops the whole swarm — no damage, block pose, and a quip.
 - **Specials (slots 3–5):** wind-up + speech bubble, then a scene effect and unblockable hit(s) — unless the defender counters with the matching key. Specials share the swarm cooldown.
 - **Counters (slots 2–5):** press while that exact attack is incoming and keep holding until it lands; they work even in hit stun but root you in place. Pressing a counter when that attack isn't coming shows `MISS` and locks your counters for 0.6 s, so mashing every block key doesn't work.
+- **Flaky environments (`G`):** the arena and HUD quake, the floor cracks and turns to lava, and three burn ticks (2–4 HP each, about 9 HP in total) hit **both** fighters. Neither the hold block nor a counter stops it, but a fighter who is airborne during a tick takes no damage from it (`SAFE!`). It can be triggered only during a round, one at a time, with an 8 s cooldown after it ends. It can K.O. (including a double K.O.).
 - **Jump** over a floppy to dodge it. Two floppies that meet mid-air cancel out.
 - A round ends on K.O. or when the timer runs out (more health wins). Taking a round at full health is a PERFECT.
 

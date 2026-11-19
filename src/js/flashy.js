@@ -345,6 +345,23 @@ export function shakeWorld(power = 1) {
   });
 }
 
+let quakeAnims = [];
+
+/** Earthquake: the world and the HUD rattle for `ms`, easing off towards the end. */
+export function quake(ms, power = 1) {
+  quakeAnims.forEach((a) => a.cancel());
+  const steps = Math.max(2, Math.round(ms / 40));
+  const frames = Array.from({ length: steps + 1 }, (_, i) => {
+    const p = i === 0 || i === steps ? 0 : power * (1 - (0.6 * i) / steps);
+    return {
+      transform: `translate(${rand(-8, 8) * p}px,${rand(-6, 6) * p}px) rotate(${rand(-0.7, 0.7) * p}deg)`,
+    };
+  });
+  quakeAnims = [world, $('#hud')].map((el) =>
+    el.animate(frames, { duration: ms, composite: 'add' }),
+  );
+}
+
 // ── Super flash ─────────────────────────────────────────────────────────────
 
 let dimAnim;
@@ -696,6 +713,8 @@ export function clearFlashy() {
   combos.length = 0;
   dimAnim?.cancel();
   zoomAnim?.cancel();
+  quakeAnims.forEach((a) => a.cancel());
+  quakeAnims = [];
   world.getAnimations().forEach((a) => a.cancel());
   for (const player of [0, 1]) {
     fighter(player).classList.remove('super');

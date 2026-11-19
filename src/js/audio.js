@@ -56,6 +56,8 @@ function noise(duration = 0.2, volume = 0.3, cutoff = 1500) {
   source.start();
 }
 
+const rand = (min, max) => min + Math.random() * (max - min);
+
 const arpeggio = (notes, type, duration, volume, step) =>
   notes.forEach((freq, i) => tone(freq, type, duration, volume, 0, i * step));
 
@@ -109,6 +111,18 @@ export const sfx = {
     tone(1500, 'triangle', 0.18, 0.15, 2400);
     tone(2250, 'sine', 0.12, 0.08, 0, 0.02);
     noise(0.12, 0.2, 9000);
+  },
+  /** "flaky environments": long sub-bass rumble with crumbling noise. */
+  quake() {
+    tone(45, 'sawtooth', 2.4, 0.35, 30);
+    tone(70, 'sine', 1.8, 0.4, 35, 0.1);
+    noise(2.6, 0.45, 400);
+    for (let i = 0; i < 5; i++) tone(rand(90, 160), 'square', 0.12, 0.08, 40, 0.2 + i * 0.4);
+  },
+  /** Lava burn tick: hiss and a low pop. */
+  sizzle() {
+    noise(0.45, 0.35, 6000);
+    tone(140, 'sine', 0.2, 0.25, 50);
   },
   sparkle() {
     arpeggio([1568, 2093, 2637, 3136], 'triangle', 0.09, 0.06, 0.035);

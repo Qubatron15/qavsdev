@@ -13,6 +13,7 @@ import {
   aura,
   clearFlashy,
   comboCounter,
+  dim,
   dust,
   fightBurst,
   guardFlash,
@@ -20,6 +21,7 @@ import {
   impact,
   koBlast,
   muzzle,
+  quake,
   roundIntro,
   screenFlash,
   setDanger,
@@ -102,6 +104,19 @@ const RANDOM_STUFF = [
   wheelSrc,
   bananaSrc,
 ];
+
+// Environment attack — `G`, belongs to neither player: "flaky environments". Everything quakes,
+// the floor turns to lava, and each burn tick hurts whoever is standing on it (a jump dodges one).
+const ENV_KEY = 'KeyG';
+const ENV_NAME = 'flaky environments';
+const ENV_DURATION = 2.8; // s of quake + lava
+const ENV_LAVA_AT = 0.5; // s of quaking (floor cracks) before the lava rises
+const ENV_BURN_TIMES = [0.8, 1.5, 2.2]; // s: one burn tick each
+const ENV_BURN = [2, 4]; // damage per tick, random inclusive (≈ 9 HP in total)
+const ENV_BURN_STUN = 0.12; // s of hit pose per burn
+const ENV_COOLDOWN = 8; // s after it ends before it can be triggered again
+const ENV_FX = { color: '#ff6a00', tint: '#a01800' };
+const ENV_STATUS = 'STAGING: 503 · DB: FLAKY · CI: RED';
 
 const BASE_DAMAGE = [8, 12]; // random inclusive range
 const CRIT_CHANCE = 0.12;
@@ -236,7 +251,8 @@ export function renderControls() {
       </div>`;
     }).join('') +
     '<p class="controls-note">Same column = same slot: your block in slot N counters your opponent\'s attack in slot N. ' +
-    'Slot 1 is held (chip damage); counters must be pressed while that attack is incoming — a wrong guess locks them for a moment.</p>';
+    'Slot 1 is held (chip damage); counters must be pressed while that attack is incoming — a wrong guess locks them for a moment.</p>' +
+    `<p class="controls-note">${keycap(ENV_KEY, ENV_NAME)} environment attack: the arena quakes and the floor turns to lava — it burns <b>both</b> fighters (jump to dodge a burn).</p>`;
 }
 
 const showControls = () =>
@@ -245,6 +261,7 @@ const showControls = () =>
 // ── State ───────────────────────────────────────────────────────────────────
 const held = [new Set(), new Set()]; // actions currently held per player
 const pressed = [new Set(), new Set()]; // actions pressed since last update
+let envPressed = false; // ENV_KEY pressed since last update
 
 let match;
 let lastTime = 0;
@@ -287,6 +304,8 @@ function newMatch() {
     docs: [],
     docVolley: null, // { spawnsLeft, timer, resolved } while Kuba's no-docs series is live
     specials: [], // { kind, t, hit, el } per running special (at most one per fighter)
+    environment: null, // { t, burns, el } while "flaky environments" plays
+    envCooldown: 0,
     announced: new Set(), // one-shot announcements per phase
   };
 }
@@ -305,8 +324,9 @@ export function resetFight() {
   match = newMatch();
   held.forEach((set) => set.clear());
   pressed.forEach((set) => set.clear());
+  envPressed = false;
   for (const f of match.fighters) {
-    fighter(f.player).classList.remove('ko', 'hit', 'blocking', 'winner', 'airborne');
+    fighter(f.player).classList.remove('ko', 'hit', 'blocking', 'winner', 'airborne', 'on-lava');
     setPose(f.player, 'stand');
   }
   render();
@@ -330,6 +350,10 @@ export const isFightActive = () => match && match.phase !== 'ready';
 
 /** Keyboard handling. Returns true if the key belongs to the fight. */
 export function handleFightKey(event, isDown) {
+  if (event.code === ENV_KEY) {
+    if (isDown && !event.repeat) envPressed = true;
+    return true;
+  }
   const binding = KEYMAP[event.code];
   if (!binding) return false;
   const [player, action] = binding;
@@ -361,6 +385,9 @@ function clearProjectiles() {
   match.docVolley = null;
   for (const special of match.specials) special.el?.remove();
   match.specials = [];
+  match.environment?.el.remove();
+  match.environment = null;
+  match.envCooldown = 0;
 }
 
 function startRound(round) {
@@ -1064,6 +1091,118 @@ function updateDocs(dt) {
   if (volley && volley.spawnsLeft === 0 && match.docs.length === 0) match.docVolley = null;
 }
 
+// ── Environment attack: "flaky environments" (ENV_KEY) ─────────────────────
+
+/** Cracks glow in the floor while it quakes, then lava rises over the whole front strip. */
+function buildLava() {
+  const root = makeEl('div', 'flaky-env');
+  const floorY = toStageY(0);
+  const status = makeEl('div', 'env-status');
+  status.textContent = ENV_STATUS;
+  root.appendChild(status);
+  for (let i = 0; i < 9; i++) {
+    const crack = makeEl('div', 'lava-crack', {
+      left: rand(0, 900) + 'px',
+      top: floorY + rand(4, 50) + 'px',
+      width: rand(40, 130) + 'px',
+      animationDelay: rand(0, ENV_LAVA_AT * 0.8) + 's',
+    });
+    crack.style.setProperty('--rot', rand(-25, 25) + 'deg');
+    root.appendChild(crack);
+  }
+  const lava = makeEl('div', 'lava', {
+    top: floorY - 10 + 'px',
+    animationDelay: ENV_LAVA_AT + 's, 0s',
+  });
+  for (let i = 0; i < 16; i++) {
+    const size = rand(6, 16) + 'px';
+    lava.appendChild(
+      makeEl('span', 'lava-bubble', {
+        left: rand(0, 950) + 'px',
+        bottom: rand(10, 50) + 'px',
+        width: size,
+        height: size,
+        animationDelay: ENV_LAVA_AT + rand(0, 1) + 's',
+        animationDuration: rand(0.6, 1.1) + 's',
+      }),
+    );
+  }
+  root.appendChild(lava);
+  for (let i = 0; i < 30; i++) {
+    const ember = makeEl('span', 'ember', {
+      left: rand(0, 960) + 'px',
+      top: floorY + 'px',
+      animationDelay: ENV_LAVA_AT + rand(0, 1.6) + 's',
+      animationDuration: rand(1, 1.8) + 's',
+    });
+    ember.style.setProperty('--drift', rand(-50, 50) + 'px');
+    root.appendChild(ember);
+  }
+  return root;
+}
+
+/** Someone pressed ENV_KEY: the whole arena starts to shake, and the lava follows. */
+function tryEnvironment() {
+  if (match.phase !== 'fight' || match.environment || match.envCooldown > 0) return;
+  const el = buildLava();
+  el.classList.add('special');
+  $('#fx').appendChild(el);
+  match.environment = { t: 0, burns: 0, el };
+  banner('FLAKY<br>ENVIRONMENTS!', 'small', 1500);
+  screenFlash(ENV_FX.color, 260, 0.45);
+  dim(ENV_FX.tint, (ENV_DURATION + SPECIAL_FADE) * 1000, 0.45);
+  quake((ENV_DURATION + SPECIAL_FADE) * 1000, 1.1);
+  sfx.quake();
+  for (const f of match.fighters) showSpeech(f, f.player ? 'it worked on staging!' : 'not my env!');
+}
+
+/** One burn tick: everyone on the ground takes a little damage; airborne fighters are safe. */
+function burn(f) {
+  if (f.health === 0) return;
+  if (f.y > 0) {
+    popText('SAFE!', f.x - 24, toStageY(f.y) + 10, '#ffd700', 12);
+    return;
+  }
+  const amount = randomInt(...ENV_BURN);
+  const wasSafe = f.health > DANGER_HEALTH;
+  f.health = Math.max(0, f.health - amount);
+  f.stun = Math.max(f.stun, ENV_BURN_STUN);
+  f.stunPose = 'hit';
+  playHitAnimation(f.player);
+  sparks(f.x, toStageY(10), ENV_FX.color);
+  impact(f.x, toStageY(6), ENV_FX.color, 0.5);
+  hudHit(f.player, false);
+  popText('-' + amount + ' HP', f.x - 40, toStageY(HURTBOX_HEIGHT) - 20, '#ff8a00', 16);
+  if (f.health === 0) match.pendingKo = true;
+  else if (wasSafe && f.health <= DANGER_HEALTH) sfx.lowHealth();
+}
+
+function updateEnvironment(dt) {
+  if (envPressed) tryEnvironment();
+  envPressed = false;
+  match.envCooldown = Math.max(0, match.envCooldown - dt);
+  const env = match.environment;
+  if (!env) return;
+  env.t += dt;
+  while (env.burns < ENV_BURN_TIMES.length && env.t >= ENV_BURN_TIMES[env.burns]) {
+    env.burns++;
+    if (match.phase !== 'fight') continue;
+    sfx.sizzle();
+    shake(0.8);
+    for (const f of match.fighters) burn(f);
+    updateHud();
+  }
+  if (env.t >= ENV_DURATION) env.el.classList.add('leaving');
+  if (env.t >= ENV_DURATION + SPECIAL_FADE) {
+    env.el.remove();
+    match.environment = null;
+    match.envCooldown = ENV_COOLDOWN;
+  }
+}
+
+/** Lava glows under a fighter's feet while they stand in it. */
+const onLava = (f) => !!match.environment && match.environment.t >= ENV_LAVA_AT && f.y === 0;
+
 /** Keep fighters inside the arena and apart from each other. */
 function resolvePositions() {
   const [a, b] = match.fighters;
@@ -1145,6 +1284,15 @@ function updateFloppies(dt) {
 
 const randomInt = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
 
+/** Restart the fighter's CSS hit animation. */
+function playHitAnimation(player) {
+  const el = fighter(player);
+  el.classList.remove('hit');
+  void el.offsetWidth;
+  el.classList.add('hit');
+  setTimeout(() => el.classList.remove('hit'), 400);
+}
+
 /**
  * Damage formula:
  *   base       8–12 (random)
@@ -1197,11 +1345,7 @@ function landHit(attacker, defender, projectile, { unblockable = false, multipli
     defender.stun = HIT_STUN;
     defender.stunPose = 'hit';
     defender.combo = 0;
-    const el = fighter(defender.player);
-    el.classList.remove('hit');
-    void el.offsetWidth; // restart the CSS hit animation
-    el.classList.add('hit');
-    setTimeout(() => el.classList.remove('hit'), 400);
+    playHitAnimation(defender.player);
     sfx.hit();
     const heavy = crit || multiplier > 1 || counterHit;
     if (heavy) sfx.heavy();
@@ -1255,6 +1399,7 @@ function render() {
     el.style.bottom = GROUND + f.y + 'px';
     el.classList.toggle('blocking', f.blocking || !!f.guard);
     el.classList.toggle('airborne', f.y > 0);
+    el.classList.toggle('on-lava', onLava(f));
     if (match.phase !== 'ready') setPose(f.player, poseFor(f));
   }
   for (const p of match.floppies) {
@@ -1326,6 +1471,7 @@ function step(dt) {
   updateBugs(dt);
   updateDocs(dt);
   updateSpecials(dt);
+  updateEnvironment(dt);
 
   if (match.pendingKo && match.phase === 'fight') {
     match.pendingKo = false;
@@ -1359,6 +1505,7 @@ function loop(now) {
   } else {
     accumulator = 0;
     pressed.forEach((set) => set.clear());
+    envPressed = false;
   }
   requestAnimationFrame(loop);
 }
