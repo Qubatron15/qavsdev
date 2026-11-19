@@ -3,10 +3,10 @@ import globals from 'globals';
 import prettier from 'eslint-config-prettier';
 
 export default [
-  { ignores: ['dist/', 'node_modules/'] },
+  { ignores: ['dist/', 'dist-presentation/', 'node_modules/'] },
   js.configs.recommended,
   {
-    files: ['src/**/*.js'],
+    files: ['src/**/*.js', 'presentation/**/*.js'],
     languageOptions: { globals: globals.browser },
   },
   {
