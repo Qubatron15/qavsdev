@@ -1,0 +1,40 @@
+/* "undocumented changes" — random objects pop up around Emilia (anchored at her feet) */
+.random-stuff {
+  width: 0;
+  height: 0;
+  z-index: 6;
+}
+
+.random-stuff > * {
+  position: absolute;
+}
+
+.random-item {
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 0 #000) drop-shadow(0 0 6px var(--cyan));
+  rotate: var(--rot);
+  animation:
+    item-pop 0.3s both,
+    item-wobble 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes item-pop {
+  from {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.25);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes item-wobble {
+  from {
+    translate: 0 -4px;
+  }
+  to {
+    translate: 0 4px;
+  }
+}

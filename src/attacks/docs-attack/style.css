@@ -1,0 +1,7 @@
+/* Kuba's no-docs series (positioned by fight.js) */
+.doc {
+  object-fit: contain;
+  image-rendering: pixelated;
+  z-index: 6;
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 14px var(--cyan));
+}

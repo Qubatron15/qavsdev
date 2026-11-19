@@ -1,0 +1,35 @@
+/* "AI code-gen" — tasks pile up around Emilia (anchored at her feet, centred on her) */
+.task-pile {
+  width: 0;
+  height: 0;
+  z-index: 6;
+}
+
+.task-pile > * {
+  position: absolute;
+}
+
+.task {
+  width: 84px;
+  height: 22px;
+  box-sizing: border-box;
+  background: #fff;
+  color: #0052cc;
+  border: 2px solid #0052cc;
+  box-shadow: 2px 2px 0 #000;
+  font-size: 7px;
+  line-height: 18px;
+  text-align: center;
+  white-space: nowrap;
+  transform: rotate(var(--rot));
+  animation: task-fall 0.3s ease-in both;
+}
+
+@keyframes task-fall {
+  from {
+    transform: translateY(-520px) rotate(var(--rot));
+  }
+  to {
+    transform: rotate(var(--rot));
+  }
+}

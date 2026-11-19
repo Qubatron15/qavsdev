@@ -1,0 +1,51 @@
+/* E: "friday afternoon hotfix" — night over the QA half */
+.night-sky {
+  left: 480px;
+  top: 80px;
+  width: 480px;
+  bottom: 0;
+  background: linear-gradient(#000010e6, #050a24d4 60%, #0a1030c4);
+  z-index: 5;
+  animation: night-in 0.4s both;
+}
+
+@keyframes night-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.night-sky > * {
+  position: absolute;
+}
+
+.moon {
+  right: 46px;
+  top: 26px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  box-shadow:
+    -14px 8px 0 0 #fff6c8,
+    -14px 8px 22px 4px #fff6c855;
+}
+
+.night-clock {
+  left: 18px;
+  top: 16px;
+  color: #ff5252;
+  font-size: 9px;
+  text-shadow: 0 0 8px #f00;
+}
+
+.star {
+  background: #fff;
+  box-shadow: 0 0 6px #fff;
+  animation: twinkle 0.9s steps(2) infinite alternate;
+}
+
+@keyframes twinkle {
+  to {
+    opacity: 0.25;
+  }
+}

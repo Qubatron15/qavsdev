@@ -1,0 +1,15 @@
+/* Thrown floppy disks (positioned and spun by fight.js) */
+.floppy {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  z-index: 6;
+}
+
+.floppy.p0 {
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 16px var(--cyan)) brightness(1.15);
+}
+
+.floppy.p1 {
+  filter: drop-shadow(0 0 6px var(--magenta)) drop-shadow(0 0 16px var(--magenta)) brightness(1.15);
+}

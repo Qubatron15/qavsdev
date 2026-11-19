@@ -69,7 +69,18 @@ src/
     sprites/            fighter poses, split by character
       emi/              emi_ stand, throw, block, hit, jump
       kuba/             kuba_ stand, throw, block, hit, jump
-    props/              scene props (guitar, floppy, masks, radar console)
+    props/              scene props (guitar, masks, radar console)
+  attacks/              one folder per attack: index.js (logic + counter data), style.css, its assets
+    index.js            attack registry (id → attack)
+    floppy-attack/      floppy disk (both players) + classic hold block
+    docs-attack/        Kuba: "no docs, no bugs" swarm
+    hotfix-attack/      Kuba: friday afternoon hotfix
+    codegen-attack/     Kuba: AI code-gen
+    undocumented-attack/ Kuba: undocumented changes
+    bugs-attack/        Emilia: bug swarm
+    acs-attack/         Emilia: missing ACs
+    priority-attack/    Emilia: bug priority wars
+    environment-attack/ G: flaky environments (lava, burns both)
   styles/               base, scene, hud, effects, flashy, boss, case-study
   js/
     state.js            shared state (health, mute, case-study flag, generation)
@@ -78,7 +89,8 @@ src/
     stage.js            scales the fixed 960×540 stage to the window
     audio.js            Web Audio synth and the sfx.* sound effects
     sprites.js          fighter pose loader (setPose / flashPose) + HUD portraits
-    fight.js            two-player fight: input, physics, floppies, bug swarm, damage, rounds
+    fight.js            two-player fight core: keymap, physics, counters, damage, rounds, main loop
+    fight/              constants and helpers shared with src/attacks, volley.js (swarm engine)
     effects.js          projectiles, floating text, banners, sparks, shake, lunge, hurt
     flashy.js           fighting-game flash: hit sparks, super flash + cut-in, dimming, camera, afterimages, trails
     hud.js              health bars, damage, caption
@@ -92,6 +104,7 @@ src/
 
 - **Story beats:** each beat in `src/js/beats/` is an async function. Use `await wait(ms)` between steps rather than `setTimeout`, so that pressing `Backspace` cancels it cleanly. To add one, create a file there and register its key in `beats/index.js`.
 - **Case-study slide:** edit the placeholder text in `index.html` (`#case`), or click the boxes and type during the talk. Live edits aren't saved.
+- **Attacks:** to add one, create `src/attacks/<name>-attack/` (copy a similar attack), register it in `src/attacks/index.js` and bind its key (and its counter's key) in `LAYOUT` in `src/js/fight.js`.
 - **Coordinates** are in stage pixels (960×540), whatever the window size.
 
 ## Scripts

@@ -1,0 +1,7 @@
+/* Emilia's bug swarm (positioned by fight.js) */
+.bug {
+  object-fit: contain;
+  image-rendering: pixelated;
+  z-index: 6;
+  filter: drop-shadow(0 0 6px var(--magenta)) drop-shadow(0 0 14px var(--magenta));
+}

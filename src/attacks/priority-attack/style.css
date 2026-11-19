@@ -1,0 +1,106 @@
+/* P: "bug priority wars" — tasks of every size rain on Kuba, a giant one flattens him */
+.priority-rain {
+  width: 0;
+  height: 0;
+  z-index: 6;
+}
+
+.priority-rain > * {
+  position: absolute;
+}
+
+.priority-task {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: #b00020;
+  border: 3px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  white-space: nowrap;
+  transform: rotate(var(--rot));
+  animation: priority-fall 0.3s ease-in both;
+}
+
+.priority-task:nth-child(3n + 1) {
+  background: #ffcdd2;
+}
+
+.priority-task:nth-child(3n + 2) {
+  background: #fff59d;
+}
+
+@keyframes priority-fall {
+  from {
+    transform: translateY(-600px) rotate(var(--rot));
+  }
+  to {
+    transform: rotate(var(--rot));
+  }
+}
+
+.priority-giant {
+  left: -98px;
+  bottom: 40px; /* Kuba's legs stay visible under it */
+  width: 196px;
+  height: 200px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: #d50000;
+  border: 5px solid #000;
+  box-shadow:
+    6px 6px 0 #000,
+    0 0 24px #f00;
+  font-size: 18px;
+  text-align: center;
+  line-height: 1.5;
+  animation:
+    giant-fall 0.3s 0.85s ease-in both,
+    giant-squash 0.25s 1.15s ease-out;
+}
+
+@keyframes giant-fall {
+  from {
+    transform: translateY(-720px);
+  }
+}
+
+@keyframes giant-squash {
+  40% {
+    transform: scale(1.06, 0.92);
+  }
+}
+
+/* Kuba's arms flailing out from under the giant task */
+.stuck-arm {
+  position: absolute;
+  top: 120px;
+  width: 44px;
+  height: 12px;
+  background: #f1c27d;
+  border: 2px solid #000;
+  border-radius: 6px;
+  animation: flail 0.18s ease-in-out infinite alternate;
+}
+
+.stuck-arm.left {
+  left: -44px;
+  transform-origin: 100% 50%;
+}
+
+.stuck-arm.right {
+  right: -44px;
+  transform-origin: 0 50%;
+  animation-delay: 0.09s;
+}
+
+@keyframes flail {
+  from {
+    rotate: -25deg;
+  }
+  to {
+    rotate: 25deg;
+  }
+}
