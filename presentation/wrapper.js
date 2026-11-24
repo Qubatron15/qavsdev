@@ -249,6 +249,7 @@ async function playNext() {
     return;
   }
   busy = true;
+  stopIdle();
   try {
     do {
       queued = false;
@@ -261,6 +262,7 @@ async function playNext() {
       }
       const beat = BEATS[beatIndex++];
       showStep(beatIndex, beat.title);
+      await settleFighters();
       await beat.run();
     } while (queued);
   } catch (error) {
@@ -279,6 +281,85 @@ function rewind() {
   busy = false;
   queued = false;
   showStep(0);
+}
+
+// ── Idle movement between beats ─────────────────────────────────────────────────────────────
+/*
+ * While the presenter talks, both fighters behave like players waiting for their move: they
+ * shuffle back and forth, hop now and then and drop into a guard (the game has no crouch; the
+ * block pose plays that part). Same keys a player would press, so the game does the animation.
+ * It runs only in the versus fight while no beat is playing, and keeps each fighter near home.
+ */
+const IDLE_KEYS = [
+  { left: 'KeyA', right: 'KeyD', jump: 'KeyW', block: 'KeyZ' },
+  { left: 'KeyJ', right: 'KeyL', jump: 'KeyI', block: 'KeyN' },
+];
+const IDLE_HOME = [200, 760]; // fighters' start x (newFighter in src/js/fight.js)
+const IDLE_RANGE = 60; // px a fighter may wander from home
+const IDLE_PAUSE = [250, 900]; // ms standing still between moves
+const IDLE_STEP = [25, 70]; // px a step covers
+const IDLE_SPEED = 0.2; // px/ms, a little under the game's walk speed (230 px/s, 184 backwards)
+const IDLE_GUARD = [400, 900]; // ms a guard is held
+
+/** A step that keeps the fighter within IDLE_RANGE of home: [direction, ms to hold]. */
+function idleStep(offset) {
+  if (Math.abs(offset) > IDLE_RANGE) return [-Math.sign(offset), Math.abs(offset) / IDLE_SPEED];
+  const px = rand(...IDLE_STEP);
+  let dir = Math.random() < 0.5 ? -1 : 1;
+  if (Math.abs(offset + dir * px) > IDLE_RANGE) dir = -dir;
+  return [dir, px / IDLE_SPEED];
+}
+
+const idleHeld = [null, null]; // key each fighter's idle loop is holding down
+const rand = (min, max) => min + Math.random() * (max - min);
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); // not cancelled by resets
+const idleAllowed = () => !busy && inVersusFight();
+
+function idleRelease(player) {
+  if (!idleHeld[player]) return;
+  keyUp(idleHeld[player]);
+  idleHeld[player] = null;
+}
+
+/** A beat is about to play: let go of every idle key. */
+function stopIdle() {
+  idleRelease(DEV);
+  idleRelease(QA);
+}
+
+/** Before a beat: both fighters back on their feet and out of their guard. */
+const settleFighters = () =>
+  waitUntil(() => {
+    const m = match();
+    return !m || m.fighters.every((f) => f.y === 0 && !f.blocking);
+  }, 1500);
+
+/** One fighter's idle behaviour, forever; it only acts while idleAllowed(). */
+async function idleLoop(player) {
+  const keys = IDLE_KEYS[player];
+  for (;;) {
+    await pause(rand(...IDLE_PAUSE));
+    if (!idleAllowed()) continue;
+    const offset = fighterOf(player).x - IDLE_HOME[player];
+    const roll = Math.random();
+    let code;
+    let hold;
+    if (roll < 0.45 || Math.abs(offset) > IDLE_RANGE) {
+      // knocked too far by a hit? the next move walks back home
+      const [dir, ms] = idleStep(offset);
+      [code, hold] = [dir < 0 ? keys.left : keys.right, ms];
+    } else if (roll < 0.6) {
+      [code, hold] = [keys.jump, 80];
+    } else if (roll < 0.75) {
+      [code, hold] = [keys.block, rand(...IDLE_GUARD)];
+    } else {
+      continue; // just stand there
+    }
+    keyDown(code);
+    idleHeld[player] = code;
+    await pause(hold);
+    if (idleHeld[player] === code) idleRelease(player); // a beat may have released it already
+  }
 }
 
 // ── Small step indicator in the corner ──────────────────────────────────────────────────────
@@ -327,3 +408,6 @@ addEventListener(
   },
   { capture: true },
 );
+
+idleLoop(DEV);
+idleLoop(QA);
