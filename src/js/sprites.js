@@ -1,4 +1,5 @@
 import { $, fighter } from './dom.js';
+import { HAT_PAD, withSantaHat } from './christmas.js';
 
 // DevOps boss: disabled
 // const SKIN = '#f0c08a';
@@ -88,13 +89,18 @@ export function loadFighter(player, poseSources, portraitSelector) {
   const img = document.createElement('img');
   img.alt = '';
   img.draggable = false;
-  img.style.height = FIGHTER_HEIGHT + 'px';
+  // Christmas edition: sprites carry a Santa hat and HAT_PAD of headroom; the body stays FIGHTER_HEIGHT
+  img.style.height = FIGHTER_HEIGHT * (1 + HAT_PAD) + 'px';
   container.prepend(img);
 
   const images = {};
+  const who = player ? 'emi' : 'kuba';
   for (const [name, src] of Object.entries(poseSources)) {
     images[name] = new Image();
-    images[name].src = src;
+    withSantaHat(src, who, name).then((festive) => {
+      images[name].src = festive;
+      if (fighters[player]?.pose === name) img.src = festive;
+    });
   }
   images.stand.addEventListener('load', () => drawPortrait(images.stand, portraitSelector));
 

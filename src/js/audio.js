@@ -124,6 +124,61 @@ export const sfx = {
     noise(0.45, 0.35, 6000);
     tone(140, 'sine', 0.2, 0.25, 50);
   },
+  /** Christmas edition: sleigh bells (a few bright jingles). */
+  sleighBells() {
+    for (let i = 0; i < 8; i++) {
+      tone(rand(2600, 3400), 'triangle', 0.08, 0.05, 0, i * 0.07);
+      tone(rand(4200, 5200), 'sine', 0.05, 0.03, 0, i * 0.07 + 0.02);
+    }
+  },
+  /** Christmas edition: "Jingle Bells" chorus (public domain), chiptune style. */
+  jingle() {
+    const E = 659,
+      G = 784,
+      C = 523,
+      D = 587,
+      F = 698;
+    const notes = [
+      E,
+      E,
+      E,
+      0,
+      E,
+      E,
+      E,
+      0,
+      E,
+      G,
+      C,
+      D,
+      E,
+      0,
+      0,
+      0,
+      F,
+      F,
+      F,
+      F,
+      F,
+      E,
+      E,
+      E,
+      E,
+      D,
+      D,
+      E,
+      D,
+      0,
+      G,
+    ];
+    const step = 0.14;
+    notes.forEach((freq, i) => {
+      if (freq) tone(freq, 'square', step * 1.4, 0.1, 0, i * step);
+      if (freq && i % 2 === 0) tone(freq / 2, 'triangle', step * 1.6, 0.1, 0, i * step);
+    });
+    for (let i = 0; i < notes.length; i += 2)
+      tone(rand(2800, 3600), 'triangle', 0.05, 0.03, 0, i * step);
+  },
   sparkle() {
     arpeggio([1568, 2093, 2637, 3136], 'triangle', 0.09, 0.06, 0.035);
   },

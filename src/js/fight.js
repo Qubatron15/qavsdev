@@ -25,6 +25,7 @@ import {
 } from './flashy.js';
 import { setCaption, setHealth } from './hud.js';
 import { FIGHTER_HEIGHT, setPose } from './sprites.js';
+import { christmasCelebration } from './christmas.js';
 import {
   COLORS,
   DANGER_HEALTH,
@@ -443,6 +444,8 @@ function updateBossResult() {
       screenFlash('#ffd700', 400, 0.6);
       banner('BUG FIXED!<br>TEAM WINS!', '', 2000);
       sfx.candy();
+      christmasCelebration();
+      sfx.jingle();
     } else {
       banner('BUG SHIPPED<br>TO PROD!', '', 2000);
       sfx.lowHealth();
@@ -468,6 +471,7 @@ function updatePhase(dt) {
       roundIntro(match.round);
       sfx.zap();
       sfx.sparkle();
+      sfx.sleighBells();
     });
     at(1.2, 'fight', () => {
       banner('FIGHT!', 'fight', 900);
@@ -507,7 +511,8 @@ function updatePhase(dt) {
         setPhase('matchOver');
         showControls();
         banner(`${NAMES[champion.player]}<br>WINS THE MATCH!`, '', 4000);
-        sfx.candy();
+        christmasCelebration();
+        sfx.jingle();
         setCaption(
           'GAME OVER',
           `${NAMES[champion.player]} wins ${champion.wins}–${match.fighters[1 - champion.player].wins}! Press [SPACE] for a rematch · [BACKSPACE] reset`,

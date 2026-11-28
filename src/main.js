@@ -5,6 +5,7 @@ import './styles/effects.css';
 import './styles/flashy.css';
 // import './styles/boss.css'; // DevOps boss: disabled
 import './styles/case-study.css';
+import './styles/christmas.css';
 
 import kubaStand from './assets/sprites/kuba/kuba_stand.png';
 import kubaThrow from './assets/sprites/kuba/kuba_throw.png';
@@ -23,9 +24,11 @@ import { loadFighter } from './js/sprites.js';
 import { initInput } from './js/input.js';
 import { resetArena } from './js/reset.js';
 import { initAmbient } from './js/flashy.js';
+import { initChristmas } from './js/christmas.js';
 
 initStageScaling();
 initAmbient();
+initChristmas();
 // createBossSprite(); // DevOps boss: disabled
 loadFighter(
   0,

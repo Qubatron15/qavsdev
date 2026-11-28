@@ -727,7 +727,7 @@ export function initAmbient() {
   const ambient = $('#ambient');
   ambient.innerHTML =
     '<div class="godrays a"></div><div class="godrays b"></div><div class="floor-sheen"></div>';
-  const colors = ['#0ff', '#ff3fa4', '#ffd700', '#fff', '#b040ff'];
+  const colors = ['#ff2d3d', '#2fe36b', '#ffd700', '#fff', '#9fd8ff']; // Christmas palette
   for (let i = 0; i < 44; i++) {
     const mote = document.createElement('span');
     mote.className = 'mote';
